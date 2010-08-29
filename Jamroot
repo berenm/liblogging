@@ -21,27 +21,8 @@ project liblogging : requirements
   <cflags>-std=c++0x
   ;
 
-path-constant TOP : . ;
 
-rule objs ( sources + : properties * ) {
-  for local name in $(sources) {
-    name_o = [ MATCH "^(.+).cpp$" : $(name) ] ;
-    if ! $(name_o) {
-      name_o = [ MATCH "^(.+)$" : $(name) ] ;
-      name_o = $(name_o).o ;
-    }
-    objects += $(name_o) ;
-    obj $(name_o) : $(name) : $(properties) ;
-  }
-  
-  return $(objects) ;
-}
-
-
-logging_src = [ path.glob-tree src : *.cpp ] ;
-alias logging_objs : [ objs $(logging_src) ] ;
-
-lib logging : logging_objs ;
+lib logging : src/logging/logging.cpp ;
 
 
 install lib64so_dist 

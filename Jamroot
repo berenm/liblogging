@@ -1,0 +1,69 @@
+import path ;
+
+lib boost_thread ;
+lib boost_program_options ;
+lib boost_filesystem ;
+lib boost_regex ;
+lib boost_iostreams ;
+lib boost_date_time ;
+lib boost_system ;
+
+project liblogging : requirements
+  <library>boost_thread
+  <library>boost_program_options
+  <library>boost_filesystem
+  <library>boost_regex
+  <library>boost_iostreams
+  <library>boost_date_time
+  <library>boost_system
+  <include>include/
+  <threading>multi
+  <cflags>-std=c++0x
+  ;
+
+path-constant TOP : . ;
+
+rule objs ( sources + : properties * ) {
+  for local name in $(sources) {
+    name_o = [ MATCH "^(.+).cpp$" : $(name) ] ;
+    if ! $(name_o) {
+      name_o = [ MATCH "^(.+)$" : $(name) ] ;
+      name_o = $(name_o).o ;
+    }
+    objects += $(name_o) ;
+    obj $(name_o) : $(name) : $(properties) ;
+  }
+  
+  return $(objects) ;
+}
+
+
+logging_src = [ path.glob-tree src : *.cpp ] ;
+alias logging_objs : [ objs $(logging_src) ] ;
+
+lib logging : logging_objs ;
+
+
+install lib64so_dist 
+    : logging
+    : <location>./dist/lib64/
+      <link>shared ;
+    
+install lib32so_dist 
+    : logging
+    : <location>./dist/lib32/
+      <link>shared 
+      <architecture>x86
+      <address-model>32 ;
+      
+install lib64a_dist 
+    : logging
+    : <location>./dist/lib64/
+      <link>static ;
+    
+install lib32a_dist 
+    : logging
+    : <location>./dist/lib32/
+      <link>static 
+      <architecture>x86
+      <address-model>32 ;

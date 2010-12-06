@@ -1,12 +1,13 @@
 import path ;
 
-lib boost_thread ;
-lib boost_program_options ;
-lib boost_filesystem ;
-lib boost_regex ;
-lib boost_iostreams ;
-lib boost_date_time ;
-lib boost_system ;
+lib boost_thread : : <search>/usr/local/lib ;
+lib boost_program_options : : <search>/usr/local/lib ;
+lib boost_filesystem : : <search>/usr/local/lib ;
+lib boost_regex : : <search>/usr/local/lib ;
+lib boost_iostreams : : <search>/usr/local/lib ;
+lib boost_date_time : : <search>/usr/local/lib ;
+lib boost_system : : <search>/usr/local/lib ;
+lib boost_log : : <search>/usr/local/lib ;
 
 project liblogging : requirements
   <library>boost_thread

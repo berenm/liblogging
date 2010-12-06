@@ -31,6 +31,6 @@ namespace logging {
 
 #define __logL(level)       __logML(main,level)
 
-#define __logML(module_m, level_m) BOOST_LOG_TRIVIAL(level_m) << #module_m \
+#define __logML(module_m, level_m) BOOST_LOG_TRIVIAL(level_m) << "[" #module_m "] "
 
 #endif /* LOGGER_HXX_ */

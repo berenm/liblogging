@@ -30,21 +30,21 @@ install lib64so_dist
     : <location>./dist/lib64/
       <link>shared ;
     
-install lib32so_dist 
-    : logging
-    : <location>./dist/lib32/
-      <link>shared 
-      <architecture>x86
-      <address-model>32 ;
+#install lib32so_dist 
+#    : logging
+#    : <location>./dist/lib32/
+#      <link>shared 
+#      <architecture>x86
+#      <address-model>32 ;
       
 install lib64a_dist 
     : logging
     : <location>./dist/lib64/
       <link>static ;
     
-install lib32a_dist 
-    : logging
-    : <location>./dist/lib32/
-      <link>static 
-      <architecture>x86
-      <address-model>32 ;
+#install lib32a_dist 
+#    : logging
+#    : <location>./dist/lib32/
+#      <link>static 
+#      <architecture>x86
+#      <address-model>32 ;

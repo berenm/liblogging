@@ -17,14 +17,16 @@ project liblogging : requirements
   <library>boost_iostreams
   <library>boost_date_time
   <library>boost_system
+  <library>boost_log
   <include>include/
   <threading>multi
   <cflags>-std=c++0x
   ;
 
 
-lib logging : src/logging/logging.cpp ;
+lib logging : src/logging/logging.cpp src/logging/detail/fileno.cpp ;
 
+exe test1 : test/test1.cpp logging ;
 
 install lib64so_dist 
     : logging

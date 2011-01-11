@@ -5,6 +5,7 @@
  */
 
 #include "logging/logging.hpp"
+#include "logging/detail/fileno.hpp"
 
 #include <boost/log/sinks.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
@@ -42,34 +43,63 @@ namespace logging {
 #define ANSI_CYAN()    "6"
 #define ANSI_WHITE()   "7"
 
-  char const* dump_level(severity_level lvl) {
-    switch (lvl) {
-      case debug:
-        return ANSI_FG(ANSI_NORMAL, ANSI_GREEN) "[debug  ]";
-      case info:
-        return ANSI_FG(ANSI_FAINT, ANSI_BLUE) "[info   ]";
-      case warning:
-        return ANSI_FG(ANSI_NORMAL, ANSI_RED) "[warning]";
-      case error:
-        return ANSI_FG(ANSI_FAINT, ANSI_MAGENTA) "[ERROR  ]";
-      case fatal:
-        return ANSI_FG(ANSI_BRIGHT, ANSI_RED) "[FATAL  ]";
-      default:
-        return ANSI_FG(ANSI_NORMAL, ANSI_BLACK) "";
+  static inline char const* dump_level(::logging::severity_level const level_in, bool const ansi_mode_in) {
+    if (ansi_mode_in) {
+      switch (level_in) {
+        case ::logging::severity_level::debug:
+          return ANSI_FG(ANSI_NORMAL, ANSI_GREEN) "[debug  ]";
+        case ::logging::severity_level::info:
+          return ANSI_FG(ANSI_FAINT, ANSI_BLUE) "[info   ]";
+        case ::logging::severity_level::warning:
+          return ANSI_FG(ANSI_NORMAL, ANSI_RED) "[warning]";
+        case ::logging::severity_level::error:
+          return ANSI_FG(ANSI_FAINT, ANSI_MAGENTA) "[ERROR  ]";
+        case ::logging::severity_level::fatal:
+          return ANSI_FG(ANSI_BRIGHT, ANSI_RED) "[FATAL  ]";
+        default:
+          return ANSI_FG(ANSI_NORMAL, ANSI_BLACK) "";
+      }
+    } else {
+      switch (level_in) {
+        case ::logging::severity_level::debug:
+          return "[debug  ]";
+        case ::logging::severity_level::info:
+          return "[info   ]";
+        case ::logging::severity_level::warning:
+          return "[warning]";
+        case ::logging::severity_level::error:
+          return "[ERROR  ]";
+        case ::logging::severity_level::fatal:
+          return "[FATAL  ]";
+        default:
+          return "";
+      }
     }
+
+    return "";
   }
 
-  void init() {
+  template< >
+  ::std::wostream& operator<<< wchar_t > (::std::wostream& stream_in, ::logging::severity_level const level_in) {
+    return stream_in << dump_level(level_in, ::logging::detail::isatty(::std::clog));
+  }
 
+  template< >
+  ::std::ostream& operator<<< char > (::std::ostream& stream_in, ::logging::severity_level const level_in) {
+    return stream_in << dump_level(level_in, ::logging::detail::isatty(::std::clog));
+  }
+
+  BOOST_LOG_GLOBAL_LOGGER_INIT(logger, logger_t) {
     logging::add_common_attributes();
 
     boost::shared_ptr< logging::core > core = logging::core::get();
 
+    bool is_a_tty = ::logging::detail::isatty(::std::clog);
+    char const* format = (is_a_tty ? ANSI_CLEAR() "%1%: %2% %3% %4%" ANSI_CLEAR() : "%1%: %2% %3% %4%");
     // Create a backend and attach a couple of streams to it
     ::boost::shared_ptr< sinks::text_ostream_backend > backend = boost::make_shared< sinks::text_ostream_backend >();
     backend->add_stream(::boost::shared_ptr< std::ostream >(&::std::clog, logging::empty_deleter()));
-    backend->set_formatter(fmt::format(ANSI_CLEAR() "%1%: %2% %3% %4%" ANSI_CLEAR())
-        % fmt::attr< unsigned int >("LineID", keywords::format = "%08x")
+    backend->set_formatter(fmt::format(format) % fmt::attr< unsigned int >("LineID", keywords::format = "%08x")
         % fmt::date_time< ::boost::posix_time::ptime >("TimeStamp")
         % fmt::attr< ::logging::severity_level >("Severity") % fmt::message());
 
@@ -82,6 +112,8 @@ namespace logging {
     boost::shared_ptr< sink_t > sink(new sink_t(backend));
 
     core->add_sink(sink);
+
+    return logger_t(keywords::severity = ::logging::severity_level::info);
   }
 
 } // namespace logging

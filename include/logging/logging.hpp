@@ -6,12 +6,11 @@
 #ifndef LOGGER_HXX_
 #define LOGGER_HXX_
 
-#define BOOST_FILESYSTEM_VERSION 2
-
 #include <boost/log/core.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
+#include <boost/log/sources/severity_feature.hpp>
 #include <boost/log/filters.hpp>
 #include <boost/log/keywords/severity.hpp>
 #include <boost/log/formatters.hpp>
@@ -28,32 +27,22 @@ namespace logging {
   namespace keywords = ::boost::log::keywords;
 
   //! Trivial severity levels
-  enum severity_level {
+  enum class severity_level {
     trace, debug, info, warning, error, fatal
   };
 
-  char const* dump_level(severity_level lvl);
+  char const* dump_level(::logging::severity_level lvl);
 
-  template< typename CharT, typename TraitsT >
-  inline std::basic_ostream< CharT, TraitsT >& operator<<(std::basic_ostream< CharT, TraitsT >& strm,
-                                                          severity_level lvl) {
-    strm << dump_level(lvl);
-    return strm;
-  }
+  template< typename char_t, typename traits_t >
+  ::std::basic_ostream< char_t, traits_t >& operator<<(::std::basic_ostream< char_t, traits_t >& stream_in,
+                                                       ::logging::severity_level const level_in);
 
-  void init();
-
-  typedef src::severity_logger_mt< severity_level > logger_t;
-
-  BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(logger, logger_t)
-  {
-    // do something on logger initialization and return logger instance
-    init();
-    return logger_t(keywords::severity = info);
-  }
+  //  typedef src::severity_logger_mt< severity_level > logger_t;
+  BOOST_LOG_DECLARE_LOGGER_MT(logger_t, ( src::severity< ::logging::severity_level > ));
+  BOOST_LOG_GLOBAL_LOGGER(logger, logger_t)
 
 #define __logML(module_m, level_m) \
-            BOOST_LOG_STREAM_WITH_PARAMS(::logging::get_logger(), (::boost::log::keywords::severity = ::logging::level_m)) << "[" #module_m "] "
+            BOOST_LOG_STREAM_WITH_PARAMS(::logging::logger::get(), (::boost::log::keywords::severity = ::logging::severity_level::level_m)) << "[" #module_m "] "
 
 } // namespace logging
 

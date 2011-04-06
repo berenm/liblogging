@@ -1,13 +1,47 @@
 import path ;
+import feature ;
+import os ;
+import common ;
+import modules ;
+import configure ;
 
-lib boost_thread : : <search>/usr/local/lib ;
-lib boost_program_options : : <search>/usr/local/lib ;
-lib boost_filesystem : : <search>/usr/local/lib ;
-lib boost_regex : : <search>/usr/local/lib ;
-lib boost_iostreams : : <search>/usr/local/lib ;
-lib boost_date_time : : <search>/usr/local/lib ;
-lib boost_system : : <search>/usr/local/lib ;
-lib boost_log : : <search>/usr/local/lib ;
+constant VERSION : 0.0.1 ;
+rule tag ( name : type ? : property-set ) {
+  if $(type) in STATIC_LIB SHARED_LIB IMPORT_LIB {
+    local result = [ common.format-name <base> : $(name) : $(type) : $(property-set) ] ;
+
+    if $(type) = SHARED_LIB && (
+       ! ( [ $(property-set).get <target-os> ] in windows cygwin darwin aix ) &&
+       ! ( [ $(property-set).get <toolset> ] in pgi ) ) {
+      result = $(result).$(VERSION)  ;
+    }
+
+    return $(result) ;
+  }    
+}
+
+local default_address_model = 32 ;
+if [ os.platform ] = X86_64 {
+  default_address_model = 64 ;
+}
+modules.poke default_address_model : $(default_address_model) ;
+
+path-constant HOME : ../.. ;
+path-constant DESTDIR : $(HOME) ;
+path-constant TOP : . ;
+constant SEARCH : <address-model>64:<search>$(HOME)/lib
+                  <address-model>64:<search>/usr/local/lib
+                  <address-model>32:<search>$(HOME)/lib32
+                  <address-model>32:<search>/usr/local/lib32 ;
+
+lib boost_thread : : $(SEARCH) ;
+lib boost_program_options : : $(SEARCH) ;
+lib boost_filesystem : : $(SEARCH) ;
+lib boost_regex : : $(SEARCH) ;
+lib boost_iostreams : : $(SEARCH) ;
+lib boost_date_time : : $(SEARCH) ;
+lib boost_system : : $(SEARCH) ;
+lib boost_log : : $(SEARCH) ;
 
 project liblogging : requirements
   <library>boost_thread
@@ -17,37 +51,41 @@ project liblogging : requirements
   <library>boost_iostreams
   <library>boost_date_time
   <library>boost_system
-  <library>boost_log
   <include>include/
+  <include>$(HOME)/include/
+  <include>/usr/local/include/
+  
+  <tag>@$(__name__).tag
+  
+  <address-model>64:<architecture>x86
+  <address-model>64:<instruction-set>athlon64
+  <address-model>32:<architecture>x86
+  <address-model>32:<instruction-set>i686
+
   <threading>multi
   <cflags>-std=c++0x
-  ;
-
+  : default-build debug ;
 
 lib logging : src/logging/logging.cpp src/logging/detail/fileno.cpp ;
 
-exe test1 : test/test1.cpp logging ;
+install install_include
+    : [ path.glob-tree include/ : *.* : ]
+    : <location>$(DESTDIR)/include/
+      <install-source-root>./include/ ;
 
-install lib64so_dist 
-    : logging
-    : <location>./dist/lib64/
-      <link>shared ;
-    
-install lib32so_dist 
-    : logging
-    : <location>./dist/lib32/
-      <link>shared 
-      <architecture>x86
-      <address-model>32 ;
-      
-install lib64a_dist 
-    : logging
-    : <location>./dist/lib64/
-      <link>static ;
-    
-install lib32a_dist 
-    : logging
-    : <location>./dist/lib32/
-      <link>static 
-      <architecture>x86
-      <address-model>32 ;
+install install_lib
+    : logging ;
+
+alias install_libs : install_lib/<link>shared/<location>"$(DESTDIR)/lib/"
+                     install_lib/<link>static/<location>"$(DESTDIR)/lib/" ;
+if $(default_address_model) = 64 {
+  alias install_libs32 : install_lib/<link>shared/<location>"$(DESTDIR)/lib32/"/<address-model>32
+                         install_lib/<link>static/<location>"$(DESTDIR)/lib32/"/<address-model>32 ;
+} else {
+  alias install_libs32 ;
+}
+
+alias build : logging ;
+alias install : install_libs
+                install_libs32
+                install_include ;

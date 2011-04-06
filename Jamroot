@@ -1,47 +1,13 @@
-import path ;
-import feature ;
-import os ;
-import common ;
-import modules ;
-import configure ;
+import fhs ;
 
-constant VERSION : 0.0.1 ;
-rule tag ( name : type ? : property-set ) {
-  if $(type) in STATIC_LIB SHARED_LIB IMPORT_LIB {
-    local result = [ common.format-name <base> : $(name) : $(type) : $(property-set) ] ;
-
-    if $(type) = SHARED_LIB && (
-       ! ( [ $(property-set).get <target-os> ] in windows cygwin darwin aix ) &&
-       ! ( [ $(property-set).get <toolset> ] in pgi ) ) {
-      result = $(result).$(VERSION)  ;
-    }
-
-    return $(result) ;
-  }    
-}
-
-local default_address_model = 32 ;
-if [ os.platform ] = X86_64 {
-  default_address_model = 64 ;
-}
-modules.poke default_address_model : $(default_address_model) ;
-
-path-constant HOME : ../.. ;
-path-constant DESTDIR : $(HOME) ;
-path-constant TOP : . ;
-constant SEARCH : <address-model>64:<search>$(HOME)/lib
-                  <address-model>64:<search>/usr/local/lib
-                  <address-model>32:<search>$(HOME)/lib32
-                  <address-model>32:<search>/usr/local/lib32 ;
-
-lib boost_thread : : $(SEARCH) ;
-lib boost_program_options : : $(SEARCH) ;
-lib boost_filesystem : : $(SEARCH) ;
-lib boost_regex : : $(SEARCH) ;
-lib boost_iostreams : : $(SEARCH) ;
-lib boost_date_time : : $(SEARCH) ;
-lib boost_system : : $(SEARCH) ;
-lib boost_log : : $(SEARCH) ;
+lib boost_thread : : $(LIB_SEARCH) ;
+lib boost_program_options : : $(LIB_SEARCH) ;
+lib boost_filesystem : : $(LIB_SEARCH) ;
+lib boost_regex : : $(LIB_SEARCH) ;
+lib boost_iostreams : : $(LIB_SEARCH) ;
+lib boost_date_time : : $(LIB_SEARCH) ;
+lib boost_system : : $(LIB_SEARCH) ;
+lib boost_log : : $(LIB_SEARCH) ;
 
 project liblogging : requirements
   <library>boost_thread
@@ -52,14 +18,9 @@ project liblogging : requirements
   <library>boost_date_time
   <library>boost_system
   <include>include/
-  <include>$(HOME)/include/
-  <include>/usr/local/include/
   
-  <tag>@$(__name__).tag
-  
-  <address-model>64:<architecture>x86
-  <address-model>64:<instruction-set>athlon64
-  <address-model>32:<architecture>x86
+  $(INCLUDES)
+  <tag>@fhs.tag
   <address-model>32:<instruction-set>i686
 
   <threading>multi
@@ -68,24 +29,16 @@ project liblogging : requirements
 
 lib logging : src/logging/logging.cpp src/logging/detail/fileno.cpp ;
 
-install install_include
-    : [ path.glob-tree include/ : *.* : ]
-    : <location>$(DESTDIR)/include/
-      <install-source-root>./include/ ;
+fhs.build build liblogging
+                :
+                : logging
+                : <target-address-models>32
+                  <target-address-models>64 ;
 
-install install_lib
-    : logging ;
-
-alias install_libs : install_lib/<link>shared/<location>"$(DESTDIR)/lib/"
-                     install_lib/<link>static/<location>"$(DESTDIR)/lib/" ;
-if $(default_address_model) = 64 {
-  alias install_libs32 : install_lib/<link>shared/<location>"$(DESTDIR)/lib32/"/<address-model>32
-                         install_lib/<link>static/<location>"$(DESTDIR)/lib32/"/<address-model>32 ;
-} else {
-  alias install_libs32 ;
-}
-
-alias build : logging ;
-alias install : install_libs
-                install_libs32
-                install_include ;
+fhs.install install liblogging 
+                    :
+                    : logging
+                    : [ path.glob-tree include/ : *.* : ]
+                    : <install-source-root>./include/
+                      <target-address-models>32
+                      <target-address-models>64 ;

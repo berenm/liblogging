@@ -1,0 +1,34 @@
+import os ;
+import path ;
+
+using gcc : : g++-4.6 ;
+
+path-constant BUILD_ROOT : . ;
+path-constant HOME : [ os.home-directories ] ;
+path-constant VERSION_FILE : $(BUILD_ROOT)/version ;
+path-constant DESTDIR : $(BUILD_ROOT)/dist/ ;
+
+constant LIB_SEARCH : <address-model>32:<search>$(HOME)/lib32&&/usr/local/lib32&&/usr/lib32
+                      <address-model>64:<search>$(HOME)/lib64&&/usr/local/lib64&&/usr/lib64
+                      <search>$(HOME)/lib&&/usr/local/lib&&/usr/lib ;
+constant INCLUDES : <include>$(HOME)/include/&&/usr/local/include/&&/usr/include/ ;
+
+if [ os.name ] = NT {
+  CAT = type ;
+} else {
+  CAT = cat ;
+}
+
+rule cat ( filename ) {
+  return [ SHELL "$(CAT) \"$(filename)\"" ] ;
+}
+
+constant VERSION : [ cat $(VERSION_FILE) ] ;
+
+modules.poke HOME : $(HOME) ;
+modules.poke BUILD_ROOT : $(BUILD_ROOT) ;
+modules.poke VERSION_FILE : $(VERSION_FILE) ;
+modules.poke DESTDIR : $(DESTDIR) ;
+modules.poke LIB_SEARCH : $(LIB_SEARCH) ;
+modules.poke INCLUDES : $(INCLUDES) ;
+modules.poke VERSION : $(VERSION) ;

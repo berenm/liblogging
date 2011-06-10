@@ -43,5 +43,5 @@ fhs.install install liblogging
                     : logging
                     : [ path.glob-tree include/ : *.* : ]
                     : <install-source-root>./include/
-                      <target-address-models>32
+#                     <target-address-models>32
                       <target-address-models>64 ;

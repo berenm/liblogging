@@ -46,8 +46,14 @@ namespace logging {
 BOOST_LOG_DECLARE_LOGGER_MT(logger_t, ( src::severity< ::logging::severity_level > ));
 BOOST_LOG_GLOBAL_LOGGER(logger, logger_t)
 
+#ifdef LOGGING_DISABLE
+#define __logML(module_m,level_m) if(0) ::std::cout
+#endif
+
+#ifndef __logML
 #define __logML(module_m, level_m) \
             BOOST_LOG_STREAM_WITH_PARAMS(::logging::logger::get(), (::boost::log::keywords::severity = ::logging::severity_level::level_m)) << "[" #module_m "] "
+#endif
 
 } // namespace logging
 

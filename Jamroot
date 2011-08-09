@@ -1,7 +1,8 @@
 # Distributed under the Boost Software License, Version 1.0.
 # See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt
 
-import fhs ;
+import path ;
+import multiarch ;
 
 lib boost_thread : : $(LIB_SEARCH) ;
 lib boost_program_options : : $(LIB_SEARCH) ;
@@ -32,16 +33,12 @@ project liblogging : requirements
 
 lib logging : src/logging/logging.cpp src/logging/detail/fileno.cpp ;
 
-fhs.build build liblogging
+multiarch.build build liblogging
                 :
-                : logging
-                : <target-address-models>32
-                  <target-address-models>64 ;
+                : logging ;
 
-fhs.install install liblogging 
+multiarch.install install liblogging 
                     :
                     : logging
                     : [ path.glob-tree include/ : *.* : ]
-                    : <install-source-root>./include/
-#                     <target-address-models>32
-                      <target-address-models>64 ;
+                    : <install-source-root>./include/ ;

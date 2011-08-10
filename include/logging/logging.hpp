@@ -36,15 +36,9 @@ namespace logging {
     trace, debug, info, warning, error, fatal
   };
 
-  char const* dump_level(::logging::severity_level lvl);
-
-  template< typename char_t, typename traits_t >
-  ::std::basic_ostream< char_t, traits_t >& operator<<(::std::basic_ostream< char_t, traits_t >& stream_in,
-                                                       ::logging::severity_level const level_in);
-
 //  typedef src::severity_logger_mt< severity_level > logger_t;
 BOOST_LOG_DECLARE_LOGGER_MT(logger_t, ( src::severity< ::logging::severity_level > ));
-BOOST_LOG_GLOBAL_LOGGER(logger, logger_t)
+BOOST_LOG_GLOBAL_LOGGER(logger, logger_t);
 
 #ifdef LOGGING_DISABLE
 #define __logML(module_m,level_m) if(0) ::std::cout

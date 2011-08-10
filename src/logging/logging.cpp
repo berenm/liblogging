@@ -20,6 +20,7 @@
 #include <boost/log/utility/init/common_attributes.hpp>
 
 #include <boost/date_time.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -47,75 +48,46 @@ namespace logging {
 #define ANSI_CYAN()    "6"
 #define ANSI_WHITE()   "7"
 
-  static inline char const* dump_level(::logging::severity_level const level_in, bool const ansi_mode_in) {
-    if (ansi_mode_in) {
-      switch (level_in) {
-        case ::logging::severity_level::debug:
-          return ANSI_FG(ANSI_NORMAL, ANSI_GREEN) "[debug  ]";
-        case ::logging::severity_level::info:
-          return ANSI_FG(ANSI_FAINT, ANSI_BLUE) "[info   ]";
-        case ::logging::severity_level::warning:
-          return ANSI_FG(ANSI_NORMAL, ANSI_RED) "[warning]";
-        case ::logging::severity_level::error:
-          return ANSI_FG(ANSI_FAINT, ANSI_MAGENTA) "[ERROR  ]";
-        case ::logging::severity_level::fatal:
-          return ANSI_FG(ANSI_BRIGHT, ANSI_RED) "[FATAL  ]";
-        default:
-          return ANSI_FG(ANSI_NORMAL, ANSI_BLACK) "";
-      }
-    } else {
-      switch (level_in) {
-        case ::logging::severity_level::debug:
-          return "[debug  ]";
-        case ::logging::severity_level::info:
-          return "[info   ]";
-        case ::logging::severity_level::warning:
-          return "[warning]";
-        case ::logging::severity_level::error:
-          return "[ERROR  ]";
-        case ::logging::severity_level::fatal:
-          return "[FATAL  ]";
-        default:
-          return "";
-      }
-    }
-
-    return "";
-  }
-
-  template< >
-  ::std::wostream& operator<<< wchar_t > (::std::wostream& stream_in, ::logging::severity_level const level_in) {
-    return stream_in << dump_level(level_in, ::logging::detail::isatty(::std::clog));
-  }
-
-  template< >
-  ::std::ostream& operator<<< char > (::std::ostream& stream_in, ::logging::severity_level const level_in) {
-    return stream_in << dump_level(level_in, ::logging::detail::isatty(::std::clog));
-  }
-
   BOOST_LOG_GLOBAL_LOGGER_INIT(logger, logger_t) {
     logging::add_common_attributes();
 
-    boost::shared_ptr< logging::core > core = logging::core::get();
+    auto filter_debug(flt::attr< ::logging::severity_level >("Severity") == ::logging::severity_level::debug);
+    auto filter_info(flt::attr< ::logging::severity_level >("Severity") == ::logging::severity_level::info);
+    auto filter_warning(flt::attr< ::logging::severity_level >("Severity") == ::logging::severity_level::warning);
+    auto filter_error(flt::attr< ::logging::severity_level >("Severity") == ::logging::severity_level::error);
+    auto filter_fatal(flt::attr< ::logging::severity_level >("Severity") == ::logging::severity_level::fatal);
+
+    auto format_ansi_debug = fmt::format(ANSI_FG(ANSI_NORMAL, ANSI_GREEN) "[debug  ]");
+    auto format_ansi_info = fmt::format(ANSI_FG(ANSI_FAINT, ANSI_BLUE) "[info   ]");
+    auto format_ansi_warning = fmt::format(ANSI_FG(ANSI_FAINT, ANSI_BLUE) "[warning]");
+    auto format_ansi_error = fmt::format(ANSI_FG(ANSI_FAINT, ANSI_BLUE) "[ERROR  ]");
+    auto format_ansi_fatal = fmt::format(ANSI_FG(ANSI_FAINT, ANSI_BLUE) "[FATAL  ]");
+
+    auto format_debug = fmt::format("[debug  ]");
+    auto format_info = fmt::format("[info   ]");
+    auto format_warning = fmt::format("[warning]");
+    auto format_error = fmt::format("[ERROR  ]");
+    auto format_fatal = fmt::format("[FATAL  ]");
+
+    auto ansi_level_format = fmt::if_(filter_debug)[format_ansi_debug].else_[fmt::if_(filter_info)[format_ansi_info].else_[fmt::if_(filter_warning)[format_ansi_warning].else_[fmt::if_(filter_error)[format_ansi_error].else_[fmt::if_(filter_fatal)[format_ansi_fatal]]]]];
+    auto level_format = fmt::if_(filter_debug)[format_debug].else_[fmt::if_(filter_info)[format_info].else_[fmt::if_(filter_warning)[format_warning].else_[fmt::if_(filter_error)[format_error].else_[fmt::if_(filter_fatal)[format_fatal]]]]];
 
     bool is_a_tty = ::logging::detail::isatty(::std::clog);
     char const* format = (is_a_tty ? ANSI_CLEAR() "%1%: %2% %3% %4%" ANSI_CLEAR() : "%1%: %2% %3% %4%");
-    // Create a backend and attach a couple of streams to it
-    ::boost::shared_ptr< sinks::text_ostream_backend > backend = boost::make_shared< sinks::text_ostream_backend >();
-    backend->add_stream(::boost::shared_ptr< std::ostream >(&::std::clog, logging::empty_deleter()));
-    backend->set_formatter(fmt::format(format) % fmt::attr< unsigned int >("LineID", keywords::format = "%08x")
-        % fmt::date_time< ::boost::posix_time::ptime >("TimeStamp")
-        % fmt::attr< ::logging::severity_level >("Severity") % fmt::message());
+    logging::init_log_to_console(::std::clog,
+                                 keywords::format = fmt::format(format)
+                                     % fmt::attr< unsigned int >("LineID", keywords::format = "%08x") % fmt::date_time
+                                     < ::boost::posix_time::ptime > ("TimeStamp") % ansi_level_format % fmt::message(),
+                                 keywords::auto_flush = true,
+                                 keywords::filter = flt::attr< ::logging::severity_level >("Severity")
+                                     >= ::logging::severity_level::info);
+    logging::init_log_to_file("application.log",
+                              keywords::format = fmt::format("%1%: %2% %3% %4%")
+                                  % fmt::attr< unsigned int >("LineID", keywords::format = "%08x") % fmt::date_time
+                                  < ::boost::posix_time::ptime > ("TimeStamp") % level_format % fmt::message(),
+                              keywords::rotation_size = 10 * 1024 * 1024);
 
-    // Enable auto-flushing after each log record written
-    backend->auto_flush(true);
-
-    // Wrap it into the frontend and register in the core.
-    // The backend requires synchronization in the frontend.
-    typedef sinks::synchronous_sink< sinks::text_ostream_backend > sink_t;
-    boost::shared_ptr< sink_t > sink(new sink_t(backend));
-
-    core->add_sink(sink);
+    boost::shared_ptr< logging::core > core = logging::core::get();
 
     return logger_t(keywords::severity = ::logging::severity_level::info);
   }

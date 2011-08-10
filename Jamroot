@@ -4,14 +4,14 @@
 import path ;
 import multiarch ;
 
-lib boost_thread : : $(LIB_SEARCH) ;
-lib boost_program_options : : $(LIB_SEARCH) ;
-lib boost_filesystem : : $(LIB_SEARCH) ;
-lib boost_regex : : $(LIB_SEARCH) ;
-lib boost_iostreams : : $(LIB_SEARCH) ;
-lib boost_date_time : : $(LIB_SEARCH) ;
-lib boost_system : : $(LIB_SEARCH) ;
-lib boost_log : : $(LIB_SEARCH) ;
+lib boost_thread : : [ multiarch.search-path ] ;
+lib boost_program_options : : [ multiarch.search-path ] ;
+lib boost_filesystem : : [ multiarch.search-path ] ;
+lib boost_regex : : [ multiarch.search-path ] ;
+lib boost_iostreams : : [ multiarch.search-path ] ;
+lib boost_date_time : : [ multiarch.search-path ] ;
+lib boost_system : : [ multiarch.search-path ] ;
+lib boost_log : : [ multiarch.search-path ] ;
 
 project liblogging : requirements
   <library>boost_thread
@@ -25,7 +25,6 @@ project liblogging : requirements
   
   $(INCLUDES)
   <tag>@$(__name__).tag
-  <address-model>32:<instruction-set>i686
 
   <threading>multi
   <cflags>-std=c++0x

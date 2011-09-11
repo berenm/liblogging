@@ -59,9 +59,9 @@ namespace logging {
 
     auto format_ansi_debug = fmt::format(ANSI_FG(ANSI_NORMAL, ANSI_GREEN) "[debug  ]");
     auto format_ansi_info = fmt::format(ANSI_FG(ANSI_FAINT, ANSI_BLUE) "[info   ]");
-    auto format_ansi_warning = fmt::format(ANSI_FG(ANSI_FAINT, ANSI_BLUE) "[warning]");
-    auto format_ansi_error = fmt::format(ANSI_FG(ANSI_FAINT, ANSI_BLUE) "[ERROR  ]");
-    auto format_ansi_fatal = fmt::format(ANSI_FG(ANSI_FAINT, ANSI_BLUE) "[FATAL  ]");
+    auto format_ansi_warning = fmt::format(ANSI_FG(ANSI_NORMAL, ANSI_RED) "[warning]");
+    auto format_ansi_error = fmt::format(ANSI_FG(ANSI_FAINT, ANSI_MAGENTA) "[ERROR  ]");
+    auto format_ansi_fatal = fmt::format(ANSI_FG(ANSI_BRIGHT, ANSI_RED) "[FATAL  ]");
 
     auto format_debug = fmt::format("[debug  ]");
     auto format_info = fmt::format("[info   ]");
@@ -77,7 +77,8 @@ namespace logging {
     logging::init_log_to_console(::std::clog,
                                  keywords::format = fmt::format(format)
                                      % fmt::attr< unsigned int >("LineID", keywords::format = "%08x") % fmt::date_time
-                                     < ::boost::posix_time::ptime > ("TimeStamp") % ansi_level_format % fmt::message(),
+                                     < ::boost::posix_time::ptime
+                                     > ("TimeStamp") % (is_a_tty ? ansi_level_format : level_format) % fmt::message(),
                                  keywords::auto_flush = true,
                                  keywords::filter = flt::attr< ::logging::severity_level >("Severity")
                                      >= ::logging::severity_level::info);

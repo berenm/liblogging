@@ -11,6 +11,7 @@
 #ifndef LOGGER_HXX_
 #define LOGGER_HXX_
 
+#include <boost/thread.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/severity_logger.hpp>

@@ -8,15 +8,10 @@
 
 # ignore hidden files
 .*
+
 # except for .gitignore
 !.gitignore
-!.cproject
-!.project
-!.dep.inc
-bin
-dist
-doc/html
+!.gitmodules
+!.uncrustifyrc
 
-fhs.jam
-build-config.jam
-
+build

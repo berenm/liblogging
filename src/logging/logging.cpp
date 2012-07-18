@@ -22,6 +22,8 @@
 #include <boost/date_time.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include <boost/filesystem.hpp>
+
 #include <iostream>
 #include <fstream>
 
@@ -31,10 +33,10 @@ namespace logging {
 
 #define ANSI_CLEAR() ANSI_ESCAPE() "0m"
 
-#define ANSI_NORMAL()  ANSI_ESCAPE() "0;"
-#define ANSI_BRIGHT()  ANSI_ESCAPE() "1;"
-#define ANSI_FAINT()   ANSI_ESCAPE() "2;"
-#define ANSI_ITALIC()  ANSI_ESCAPE() "3;"
+#define ANSI_NORMAL() ANSI_ESCAPE() "0;"
+#define ANSI_BRIGHT() ANSI_ESCAPE() "1;"
+#define ANSI_FAINT()  ANSI_ESCAPE() "2;"
+#define ANSI_ITALIC() ANSI_ESCAPE() "3;"
 
 #define ANSI_FG(mode_m, color_m) mode_m() "3" color_m() "m"
 #define ANSI_BG(mode_m, color_m) mode_m() "4" color_m() "m"
@@ -57,35 +59,35 @@ namespace logging {
     auto filter_error(flt::attr< ::logging::severity_level >("Severity") == ::logging::severity_level::error);
     auto filter_fatal(flt::attr< ::logging::severity_level >("Severity") == ::logging::severity_level::fatal);
 
-    auto format_ansi_debug = fmt::format(ANSI_FG(ANSI_NORMAL, ANSI_GREEN) "[debug  ]");
-    auto format_ansi_info = fmt::format(ANSI_FG(ANSI_FAINT, ANSI_BLUE) "[info   ]");
-    auto format_ansi_warning = fmt::format(ANSI_FG(ANSI_NORMAL, ANSI_RED) "[warning]");
-    auto format_ansi_error = fmt::format(ANSI_FG(ANSI_FAINT, ANSI_MAGENTA) "[ERROR  ]");
-    auto format_ansi_fatal = fmt::format(ANSI_FG(ANSI_BRIGHT, ANSI_RED) "[FATAL  ]");
+    auto format_ansi_debug   = fmt::format(ANSI_FG(ANSI_FAINT, ANSI_GREEN) "[debug  ]");
+    auto format_ansi_info    = fmt::format(ANSI_FG(ANSI_NORMAL, ANSI_BLUE) "[info   ]");
+    auto format_ansi_warning = fmt::format(ANSI_FG(ANSI_NORMAL, ANSI_YELLOW) "[warning]");
+    auto format_ansi_error   = fmt::format(ANSI_FG(ANSI_NORMAL, ANSI_RED) "[ERROR  ]");
+    auto format_ansi_fatal   = fmt::format(ANSI_BG(ANSI_NORMAL, ANSI_RED) ANSI_FG(ANSI_BRIGHT, ANSI_BLACK) "[FATAL  ]");
 
-    auto format_debug = fmt::format("[debug  ]");
-    auto format_info = fmt::format("[info   ]");
+    auto format_debug   = fmt::format("[debug  ]");
+    auto format_info    = fmt::format("[info   ]");
     auto format_warning = fmt::format("[warning]");
-    auto format_error = fmt::format("[ERROR  ]");
-    auto format_fatal = fmt::format("[FATAL  ]");
+    auto format_error   = fmt::format("[ERROR  ]");
+    auto format_fatal   = fmt::format("[FATAL  ]");
 
     auto ansi_level_format = fmt::if_(filter_debug)[format_ansi_debug].else_[fmt::if_(filter_info)[format_ansi_info].else_[fmt::if_(filter_warning)[format_ansi_warning].else_[fmt::if_(filter_error)[format_ansi_error].else_[fmt::if_(filter_fatal)[format_ansi_fatal]]]]];
-    auto level_format = fmt::if_(filter_debug)[format_debug].else_[fmt::if_(filter_info)[format_info].else_[fmt::if_(filter_warning)[format_warning].else_[fmt::if_(filter_error)[format_error].else_[fmt::if_(filter_fatal)[format_fatal]]]]];
+    auto level_format      = fmt::if_(filter_debug)[format_debug].else_[fmt::if_(filter_info)[format_info].else_[fmt::if_(filter_warning)[format_warning].else_[fmt::if_(filter_error)[format_error].else_[fmt::if_(filter_fatal)[format_fatal]]]]];
 
-    bool is_a_tty = ::logging::detail::isatty(::std::clog);
-    char const* format = (is_a_tty ? ANSI_CLEAR() "%1%: %2% %3% %4%" ANSI_CLEAR() : "%1%: %2% %3% %4%");
+    bool        is_a_tty = ::logging::detail::isatty(::std::clog);
+    char const* format   = (is_a_tty ? ANSI_CLEAR() "%1%: %2% %3% %4%" ANSI_CLEAR() : "%1%: %2% %3% %4%");
     logging::init_log_to_console(::std::clog,
                                  keywords::format = fmt::format(format)
-                                     % fmt::attr< unsigned int >("LineID", keywords::format = "%08x") % fmt::date_time
-                                     < ::boost::posix_time::ptime
-                                     > ("TimeStamp") % (is_a_tty ? ansi_level_format : level_format) % fmt::message(),
+                                                    % fmt::attr< unsigned int >("LineID", keywords::format = "%08x") % fmt::date_time
+                                                    < ::boost::posix_time::ptime
+                                                    >("TimeStamp") % (is_a_tty ? ansi_level_format : level_format) % fmt::message(),
                                  keywords::auto_flush = true,
                                  keywords::filter = flt::attr< ::logging::severity_level >("Severity")
-                                     >= ::logging::severity_level::info);
+                                                    >= ::logging::severity_level::debug);
     logging::init_log_to_file("application.log",
                               keywords::format = fmt::format("%1%: %2% %3% %4%")
-                                  % fmt::attr< unsigned int >("LineID", keywords::format = "%08x") % fmt::date_time
-                                  < ::boost::posix_time::ptime > ("TimeStamp") % level_format % fmt::message(),
+                                                 % fmt::attr< unsigned int >("LineID", keywords::format = "%08x") % fmt::date_time
+                                                 < ::boost::posix_time::ptime >("TimeStamp") % level_format % fmt::message(),
                               keywords::rotation_size = 10 * 1024 * 1024);
 
     boost::shared_ptr< logging::core > core = logging::core::get();

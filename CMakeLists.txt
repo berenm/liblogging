@@ -1,17 +1,21 @@
 cmake_minimum_required(VERSION 2.8)
 find_package(Git REQUIRED)
-message(STATUS "updating liblogging submodules...")
-execute_process(COMMAND git submodule update --init WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_QUIET)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(GNUInstallDirs)
+#include(DebianVersion)
+include(AddSubmodule)
+
+#parse_debian_version(LIBLOGGING_VERSION)
+add_submodule(BOOSTLOG lib/boost-log
+  INCLUDE_DIRS .
+)
 
 project(liblogging CXX)
 
 find_package(Boost COMPONENTS program_options filesystem system regex thread chrono REQUIRED)
 include_directories(
   ${Boost_INCLUDE_DIRS}
-  lib/boost-log
 )
 link_directories(${Boost_LIBRARY_DIRS})
 
@@ -26,29 +30,29 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 # liblogging
 file(GLOB_RECURSE LIBLOGGING_SOURCES src/*.cpp)
 file(GLOB_RECURSE BOOSTLOG_SOURCES
-  lib/boost-log/libs/log/src/attribute_name.cpp
-  lib/boost-log/libs/log/src/attribute_set.cpp
-  lib/boost-log/libs/log/src/attribute_values_view.cpp
-  lib/boost-log/libs/log/src/code_conversion.cpp
-  lib/boost-log/libs/log/src/core.cpp
-  lib/boost-log/libs/log/src/record_ostream.cpp
-  lib/boost-log/libs/log/src/severity_level.cpp
-  lib/boost-log/libs/log/src/global_logger_storage.cpp
-  lib/boost-log/libs/log/src/named_scope.cpp
-  lib/boost-log/libs/log/src/process_id.cpp
-  lib/boost-log/libs/log/src/thread_id.cpp
-  lib/boost-log/libs/log/src/timer.cpp
-  lib/boost-log/libs/log/src/exceptions.cpp
-  lib/boost-log/libs/log/src/default_sink.cpp
-  lib/boost-log/libs/log/src/text_ostream_backend.cpp
-  lib/boost-log/libs/log/src/text_file_backend.cpp
-  lib/boost-log/libs/log/src/syslog_backend.cpp
-  lib/boost-log/libs/log/src/thread_specific.cpp
-  lib/boost-log/libs/log/src/once_block.cpp
-  lib/boost-log/libs/log/src/timestamp.cpp
-  lib/boost-log/libs/log/src/threadsafe_queue.cpp
-  lib/boost-log/libs/log/src/event.cpp
-  lib/boost-log/libs/log/src/trivial.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/attribute_name.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/attribute_set.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/attribute_values_view.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/code_conversion.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/core.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/record_ostream.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/severity_level.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/global_logger_storage.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/named_scope.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/process_id.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/thread_id.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/timer.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/exceptions.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/default_sink.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/text_ostream_backend.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/text_file_backend.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/syslog_backend.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/thread_specific.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/once_block.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/timestamp.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/threadsafe_queue.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/event.cpp
+  ${BOOSTLOG_SOURCE_DIR}/libs/log/src/trivial.cpp
 )
 add_library(logging SHARED
   ${LIBLOGGING_SOURCES}

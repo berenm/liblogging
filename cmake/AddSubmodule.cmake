@@ -2,7 +2,7 @@ include(CMakeParseArguments)
 
 find_package(Git REQUIRED)
 
-macro(add_submodule SUBMODULE_NAME SUBMODULE_FOLDER)
+function(add_submodule SUBMODULE_NAME SUBMODULE_FOLDER)
 
   set(GTULU_PROGRAM_ARGS_FLAGS )
   set(GTULU_PROGRAM_ARGS_ONE_VALUE   )
@@ -37,4 +37,4 @@ macro(add_submodule SUBMODULE_NAME SUBMODULE_FOLDER)
     endforeach()
   endif()
 
-endmacro(add_submodule)
+endfunction(add_submodule)

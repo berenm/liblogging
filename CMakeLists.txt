@@ -5,12 +5,12 @@ include(GNUInstallDirs)
 #include(DebianVersion)
 include(AddSubmodule)
 
+project(liblogging CXX)
+
 #parse_debian_version(LIBLOGGING_VERSION)
 add_submodule(boost-log lib/boost-log
   INCLUDE_DIRS .
 )
-
-project(liblogging CXX)
 
 find_package(Boost COMPONENTS program_options filesystem system regex thread chrono REQUIRED)
 include_directories(

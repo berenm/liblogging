@@ -699,7 +699,7 @@ namespace
 
 namespace boost
 {
-namespace filesystem3
+namespace filesystem
 {
 
 namespace detail
@@ -714,6 +714,20 @@ namespace detail
       option == copy_option::fail_if_exists),
         from, to, ec, "boost::filesystem::copy_file");
   }
+
+}  // namespace detail
+} // namespace filesystem
+} // namespace boost
+
+namespace boost
+{
+namespace filesystem3
+{
+
+namespace detail
+{
+
+  using boost::filesystem::detail::copy_file;
 
 }  // namespace detail
 } // namespace filesystem

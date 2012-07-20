@@ -2,32 +2,26 @@ cmake_minimum_required(VERSION 2.8)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(GNUInstallDirs)
-#include(DebianVersion)
+include(ParseVersion)
 include(AddSubmodule)
 
 project(liblogging CXX)
+parse_version(liblogging VERSION 0.0.1)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-#parse_debian_version(LIBLOGGING_VERSION)
 add_submodule(boost-log lib/boost-log
   INCLUDE_DIRS .
 )
 
-find_package(Boost COMPONENTS program_options filesystem system regex thread chrono REQUIRED)
-include_directories(
-  ${Boost_INCLUDE_DIRS}
-)
+find_package(Boost COMPONENTS filesystem system thread REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 
-# -------------------------------------------------------------------------
-# project version
-set(LIBLOGGING_VERSION 0.0.1)
-
 include_directories(include)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 # -------------------------------------------------------------------------
 # liblogging
-file(GLOB_RECURSE LIBLOGGING_SOURCES src/*.cpp)
+file(GLOB_RECURSE liblogging_SOURCES src/*.cpp)
 file(GLOB_RECURSE boost-log_SOURCES
   ${boost-log_SOURCE_DIR}/libs/log/src/attribute_name.cpp
   ${boost-log_SOURCE_DIR}/libs/log/src/attribute_set.cpp
@@ -54,16 +48,17 @@ file(GLOB_RECURSE boost-log_SOURCES
   ${boost-log_SOURCE_DIR}/libs/log/src/trivial.cpp
 )
 add_library(logging SHARED
-  ${LIBLOGGING_SOURCES}
+  ${liblogging_SOURCES}
   ${boost-log_SOURCES}
 )
 set_target_properties(logging PROPERTIES
-  VERSION   "${LIBLOGGING_VERSION}"
-  SOVERSION "${LIBLOGGING_SOVERSION}"
-  SONAME    "liblogging${LIBLOGGING_SOVERSION}"
+  VERSION   ${liblogging_VERSION}
+  SOVERSION ${liblogging_SOVERSION}
+  SONAME    liblogging${liblogging_SOVERSION}
 )
 target_link_libraries(logging
   ${Boost_LIBRARIES}
+  pthread rt
 )
 
 # -------------------------------------------------------------------------

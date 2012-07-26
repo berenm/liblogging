@@ -9,9 +9,7 @@ project(liblogging CXX)
 parse_version(liblogging VERSION 0.0.1)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-add_submodule(boost-log lib/boost-log
-  INCLUDE_DIRS .
-)
+add_submodule(boost-log lib/boost-log INCLUDE_DIRS .)
 
 find_package(Boost COMPONENTS filesystem system thread REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
@@ -73,10 +71,12 @@ install(DIRECTORY include/logging
 
 # -------------------------------------------------------------------------
 # tests
-enable_testing()
+if(CMAKE_BUILD_TESTS)
+  enable_testing()
 
-add_executable(unit-test-logging
-  test/test1.cpp
-)
-target_link_libraries(unit-test-logging logging)
-add_test(unit-test-logging unit-test-logging)
+  add_executable(unit-test-logging
+    test/test1.cpp
+  )
+  target_link_libraries(unit-test-logging logging)
+  add_test(unit-test-logging unit-test-logging)
+endif()

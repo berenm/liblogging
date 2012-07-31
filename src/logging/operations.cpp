@@ -727,7 +727,15 @@ namespace filesystem3
 namespace detail
 {
 
-  using boost::filesystem::detail::copy_file;
+  BOOST_FILESYSTEM_DECL
+  void copy_file(const path& from, const path& to,
+                  BOOST_SCOPED_ENUM(copy_option)option,
+                  error_code* ec)
+  {
+    error(!BOOST_COPY_FILE(from.c_str(), to.c_str(),
+      option == copy_option::fail_if_exists),
+        from, to, ec, "boost::filesystem::copy_file");
+  }
 
 }  // namespace detail
 } // namespace filesystem

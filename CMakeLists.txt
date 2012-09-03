@@ -4,6 +4,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(GNUInstallDirs)
 include(ParseVersion)
 include(AddSubmodule)
+include(FindCotire)
 
 project(liblogging CXX)
 parse_version(liblogging VERSION 0.0.1)
@@ -58,6 +59,7 @@ target_link_libraries(logging
   ${Boost_LIBRARIES}
   pthread rt
 )
+add_cotire(logging)
 
 # -------------------------------------------------------------------------
 # installation

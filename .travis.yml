@@ -1,0 +1,8 @@
+language: cpp
+script: cmake -DCMAKE_BUILD_TESTS=1 . && make && make test
+compiler:
+  - clang
+  - gcc
+before_install:
+ - sudo apt-get update -qq
+ - sudo apt-get install -qq libboost1.48-all-dev

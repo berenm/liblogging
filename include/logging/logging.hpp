@@ -17,52 +17,77 @@
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sources/severity_feature.hpp>
+#include <boost/log/sources/channel_feature.hpp>
 #include <boost/log/filters.hpp>
 #include <boost/log/keywords/severity.hpp>
+#include <boost/log/keywords/channel.hpp>
 #include <boost/log/formatters.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/trivial.hpp>
+#include <ostream>
 
 namespace logging {
-  namespace logging = ::boost::log;
-  namespace sinks = ::boost::log::sinks;
-  namespace src = ::boost::log::sources;
-  namespace fmt = ::boost::log::formatters;
-  namespace flt = ::boost::log::filters;
-  namespace attrs = ::boost::log::attributes;
-  namespace keywords = ::boost::log::keywords;
+  namespace blg = boost::log;
+  namespace bls = boost::log::sources;
+  namespace blf = boost::log::formatters;
+  namespace blt = boost::log::filters;
+  namespace blk = boost::log::keywords;
 
-  //! Trivial severity levels
-  enum class severity_level {
-    trace, debug, info, warning, error, fatal
+  class level {
+    private:
+      size_t l;
+
+    public:
+      level() : l(0) {}
+      level(size_t const l) : l(l) {}
+
+      friend std::ostream& operator<<(std::ostream& s, logging::level const& l);
+      bool operator>=(level const& o) const { return this->l >= o.l; }
+      operator size_t() const { return this->l; }
+
+      static const level trace;
+      static const level debug;
+      static const level info;
+      static const level notice;
+      static const level warning;
+      static const level error;
+      static const level fatal;
   };
 
-//  typedef src::severity_logger_mt< severity_level > logger_t;
-BOOST_LOG_DECLARE_LOGGER_MT(logger_t, ( src::severity< ::logging::severity_level > ));
-BOOST_LOG_GLOBAL_LOGGER(logger, logger_t);
+  BOOST_LOG_DECLARE_LOGGER_MT(logger_class, (bls::severity< logging::level > )(bls::channel< std::string > ));
+  BOOST_LOG_GLOBAL_LOGGER(logger, logger_class);
 
-#ifdef LOGGING_DISABLE
-#define __logML(module_m,level_m) if(0) ::std::cout
-#endif
+  template< typename Context >
+  class logger_maker {
+    private:
+      static inline boost::log::aux::record_pump< logging::logger_class > make(logging::level const& level, std::string const& module=Context::module) {
+        return boost::log::aux::make_pump_stream(logging::logger::get(), logging::logger::get().open_record((boost::log::keywords::severity = level, boost::log::keywords::channel = module)));
+      }
 
-#ifndef __logML
-#define __logML(module_m, level_m) \
-            BOOST_LOG_STREAM_WITH_PARAMS(::logging::logger::get(), (::boost::log::keywords::severity = ::logging::severity_level::level_m)) << "[" #module_m "] "
-#endif
+    public:
+      static inline boost::log::aux::record_pump< logging::logger_class > trace() { return logger_maker::make(logging::level::trace); }
+      static inline boost::log::aux::record_pump< logging::logger_class > debug() { return logger_maker::make(logging::level::debug); }
+      static inline boost::log::aux::record_pump< logging::logger_class > info() { return logger_maker::make(logging::level::info); }
+      static inline boost::log::aux::record_pump< logging::logger_class > notice() { return logger_maker::make(logging::level::notice); }
+      static inline boost::log::aux::record_pump< logging::logger_class > warning() { return logger_maker::make(logging::level::warning); }
+      static inline boost::log::aux::record_pump< logging::logger_class > error() { return logger_maker::make(logging::level::error); }
+      static inline boost::log::aux::record_pump< logging::logger_class > fatal() { return logger_maker::make(logging::level::fatal); }
+  };
+
+  struct default_context {
+    static std::string const module;
+  };
+
+  typedef logger_maker< default_context > log;
 
 } // namespace logging
 
-#define __fatalM(module_m)  __logML(module_m,fatal)
-#define __fatal             __logML(main,fatal)
-#define __errorM(module_m)  __logML(module_m,error)
-#define __error             __logML(main,error)
-#define __warnM(module_m)   __logML(module_m,warning)
-#define __warn              __logML(main,warning)
-#define __infoM(module_m)   __logML(module_m,info)
-#define __info              __logML(main,info)
-#define __debugM(module_m)  __logML(module_m,debug)
-#define __debug             __logML(main,debug)
-
-#define __logL(level)       __logML(main,level)
+#define __fatal()  logging::log::fatal().stream()
+#define __error()  logging::log::error().stream()
+#define __warn()   logging::log::warning().stream()
+#define __info()   logging::log::info().stream()
+#define __notice() logging::log::notice().stream()
+#define __debug()  logging::log::debug().stream()
+#define __trace()  logging::log::trace().stream()
 
 #endif /* LOGGER_HXX_ */

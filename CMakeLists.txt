@@ -5,10 +5,10 @@ include(GNUInstallDirs)
 include(ParseVersion)
 include(AddSubmodule)
 include(FindCotire)
+include(FindCXX11)
 
 project(liblogging CXX)
 parse_version(liblogging VERSION 0.0.1)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 add_submodule(boost-log lib/boost-log INCLUDE_DIRS .)
 
@@ -37,7 +37,7 @@ file(GLOB_RECURSE boost-log_SOURCES
   ${boost-log_SOURCE_DIR}/libs/log/src/exceptions.cpp
   ${boost-log_SOURCE_DIR}/libs/log/src/default_sink.cpp
   ${boost-log_SOURCE_DIR}/libs/log/src/text_ostream_backend.cpp
-  ${boost-log_SOURCE_DIR}/libs/log/src/text_file_backend.cpp
+  # ${boost-log_SOURCE_DIR}/libs/log/src/text_file_backend.cpp
   ${boost-log_SOURCE_DIR}/libs/log/src/syslog_backend.cpp
   ${boost-log_SOURCE_DIR}/libs/log/src/thread_specific.cpp
   ${boost-log_SOURCE_DIR}/libs/log/src/once_block.cpp

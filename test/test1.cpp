@@ -10,30 +10,39 @@
 
 #include <logging/logging.hpp>
 
+namespace test_module {
+  namespace logging {
+    struct context {
+      static std::string const module;
+    };
+
+    std::string const context::module = "log/module/test";
+
+    typedef::logging::logger_maker< context > log;
+  }
+
+  static void test() {
+    __trace() << "debug message";
+    __debug() << "debug message";
+    __info() << "info message";
+    __notice() << "notice message";
+    __warn() << "warn message";
+    __error() << "error message";
+    __fatal() << "fatal message";
+  }
+
+}
+
 int main(int arg_count, char** arg_values) {
-  __debug
-    << "debug message";
-  __info
-    << "info message";
-  __warn
-    << "warn message";
-  __error
-    << "error message";
-  __fatal
-    << "fatal message";
+  __trace() << "debug message";
+  __debug() << "debug message";
+  __info() << "info message";
+  __notice() << "notice message";
+  __warn() << "warn message";
+  __error() << "error message";
+  __fatal() << "fatal message";
 
-  //  ::logging::logger::get().set_attributes();
-
-  __debugM (main)
-    << "debug message";
-  __infoM(module1)
-    << "info message";
-  __warnM(opengl)
-    << "warn message";
-  __errorM()
-    << "error message";
-  __fatalM("test")
-    << "fatal message";
+  test_module::test();
 
   return 0;
 }

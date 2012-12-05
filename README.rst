@@ -1,6 +1,9 @@
 ==========================
 liblogging utility library
 ==========================
+.. image:: https://secure.travis-ci.org/berenm/liblogging.png?branch=master
+    :alt: Build Status
+    :target: https://travis-ci.org/berenm/liblogging
 
 COPYING INFORMATION
 `````````````````````

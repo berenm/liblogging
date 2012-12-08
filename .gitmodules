@@ -1,3 +1,6 @@
 [submodule "lib/boost-log"]
 	path = lib/boost-log
 	url = https://github.com/bminor/boost-log.git
+[submodule "cmake/extra"]
+	path = cmake/extra
+	url = git://github.com/berenm/cmake-extra.git

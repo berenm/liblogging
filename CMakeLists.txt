@@ -5,7 +5,6 @@ include(CMakeExtraBootstrap)
 include(GNUInstallDirs)
 include(ParseVersion)
 include(AddSubmodule)
-include(FindCotire)
 include(FindCXX11)
 
 project(liblogging CXX)
@@ -60,7 +59,6 @@ target_link_libraries(logging
   ${Boost_LIBRARIES}
   pthread rt
 )
-add_cotire(logging)
 
 # -------------------------------------------------------------------------
 # installation

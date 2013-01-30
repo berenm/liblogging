@@ -12,26 +12,15 @@
 #define LOGGER_HXX_
 
 #include <boost/thread.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/sources/global_logger_storage.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/sources/severity_feature.hpp>
-#include <boost/log/sources/channel_feature.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/keywords/severity.hpp>
-#include <boost/log/keywords/channel.hpp>
-#include <boost/log/formatters.hpp>
-#include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
+#include <boost/log/common.hpp>
 #include <ostream>
 
 namespace logging {
   namespace blg = boost::log;
   namespace bls = boost::log::sources;
-  namespace blf = boost::log::formatters;
-  namespace blt = boost::log::filters;
+  namespace ble = boost::log::expressions;
   namespace blk = boost::log::keywords;
+  namespace bla = boost::log::attributes;
 
   class level {
     private:
@@ -41,7 +30,7 @@ namespace logging {
       level() : l(0) {}
       level(size_t const l) : l(l) {}
 
-      friend std::ostream& operator<<(std::ostream& s, logging::level const& l);
+      template< typename S > friend S& operator<<(S& s, logging::level const& l);
       bool operator>=(level const& o) const { return this->l >= o.l; }
       operator size_t() const { return this->l; }
 
@@ -54,24 +43,32 @@ namespace logging {
       static const level fatal;
   };
 
-  BOOST_LOG_DECLARE_LOGGER_MT(logger_class, (bls::severity< logging::level > )(bls::channel< std::string > ));
+  typedef bls::severity_channel_logger_mt< logging::level > logger_class;
   BOOST_LOG_GLOBAL_LOGGER(logger, logger_class);
 
   template< typename Context >
   class logger_maker {
     private:
-      static inline boost::log::aux::record_pump< logging::logger_class > make(logging::level const& level, std::string const& module=Context::module) {
-        return boost::log::aux::make_pump_stream(logging::logger::get(), logging::logger::get().open_record((boost::log::keywords::severity = level, boost::log::keywords::channel = module)));
-      }
+      logger_maker(logging::level const& level, std::string const& module=Context::module) :
+        logger(logging::logger::get()),
+        record(this->logger.open_record((boost::log::keywords::severity = level, boost::log::keywords::channel = module)))
+      {}
+
+      logging::logger_class& logger;
+      blg::record            record;
+
+      typedef boost::log::aux::record_pump< logging::logger_class > pump_type;
 
     public:
-      static inline boost::log::aux::record_pump< logging::logger_class > trace() { return logger_maker::make(logging::level::trace); }
-      static inline boost::log::aux::record_pump< logging::logger_class > debug() { return logger_maker::make(logging::level::debug); }
-      static inline boost::log::aux::record_pump< logging::logger_class > info() { return logger_maker::make(logging::level::info); }
-      static inline boost::log::aux::record_pump< logging::logger_class > notice() { return logger_maker::make(logging::level::notice); }
-      static inline boost::log::aux::record_pump< logging::logger_class > warning() { return logger_maker::make(logging::level::warning); }
-      static inline boost::log::aux::record_pump< logging::logger_class > error() { return logger_maker::make(logging::level::error); }
-      static inline boost::log::aux::record_pump< logging::logger_class > fatal() { return logger_maker::make(logging::level::fatal); }
+      static inline logger_maker trace() { return logger_maker(logging::level::trace); }
+      static inline logger_maker debug() { return logger_maker(logging::level::debug); }
+      static inline logger_maker info() { return logger_maker(logging::level::info); }
+      static inline logger_maker notice() { return logger_maker(logging::level::notice); }
+      static inline logger_maker warning() { return logger_maker(logging::level::warning); }
+      static inline logger_maker error() { return logger_maker(logging::level::error); }
+      static inline logger_maker fatal() { return logger_maker(logging::level::fatal); }
+
+      inline pump_type pump() { return boost::log::aux::make_record_pump(this->logger, this->record); }
   };
 
   struct default_context {
@@ -82,12 +79,12 @@ namespace logging {
 
 } // namespace logging
 
-#define __fatal()  logging::log::fatal().stream()
-#define __error()  logging::log::error().stream()
-#define __warn()   logging::log::warning().stream()
-#define __info()   logging::log::info().stream()
-#define __notice() logging::log::notice().stream()
-#define __debug()  logging::log::debug().stream()
-#define __trace()  logging::log::trace().stream()
+#define __fatal()  logging::log::fatal().pump().stream()
+#define __error()  logging::log::error().pump().stream()
+#define __warn()   logging::log::warning().pump().stream()
+#define __info()   logging::log::info().pump().stream()
+#define __notice() logging::log::notice().pump().stream()
+#define __debug()  logging::log::debug().pump().stream()
+#define __trace()  logging::log::trace().pump().stream()
 
 #endif /* LOGGER_HXX_ */

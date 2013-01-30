@@ -10,14 +10,10 @@
 
 #include "logging/logging.hpp"
 
-#include <boost/log/sinks.hpp>
-#include <boost/log/utility/empty_deleter.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/utility/setup/console.hpp>
 #include <boost/log/attributes.hpp>
-
-#include <boost/log/utility/init/to_console.hpp>
-#include <boost/log/utility/init/to_file.hpp>
-#include <boost/log/utility/init/common_attributes.hpp>
-#include <boost/log/formatters/char_decorator.hpp>
+#include <boost/log/expressions.hpp>
 
 #include <boost/date_time.hpp>
 #include <boost/shared_ptr.hpp>
@@ -74,7 +70,8 @@ namespace logging {
     "[FATAL  ]",
   };
 
-  std::ostream& operator<<(std::ostream& s, logging::level const& l) {
+  template< typename S >
+  S& operator<<(S& s, logging::level const& l) {
     s << level_names[l.l];
     return s;
   }
@@ -89,16 +86,6 @@ namespace logging {
 
   std::string const default_context::module = "main";
 
-  template< typename >
-  struct ansi_decorator_traits;
-
-  template< >
-  struct ansi_decorator_traits< char > {
-    static boost::iterator_range< const char* const* > get_patterns() {
-      return boost::make_iterator_range(level_names);
-
-    }
-
 #define __ansi_trace()   __ansi(__ansi_faint())
 #define __ansi_debug()   __ansi(__ansi_color(fg, normal, green) ";" __ansi_faint())
 #define __ansi_info()    __ansi(__ansi_color(fg, normal, blue))
@@ -107,70 +94,58 @@ namespace logging {
 #define __ansi_error()   __ansi(__ansi_color(fg, normal, red))
 #define __ansi_fatal()   __ansi(__ansi_color(fg, bright, black) ";" __ansi_color(bg, normal, red) ";" __ansi_bold())
 
-    static boost::iterator_range< const char* const* > get_replacements() {
-      static const char* const replacements[] = {
-        __ansi_trace() "[trace  ]",
-        __ansi_debug() "[debug  ]",
-        __ansi_info() "[info   ]",
-        __ansi_notice() "[notice ]",
-        __ansi_warning() "[Warning]",
-        __ansi_error() "[ERROR  ]",
-        __ansi_fatal() "[FATAL  ]",
-      };
-
-      return boost::make_iterator_range(replacements);
-    }
-
+  static const char* const ansi_level_names[] = {
+    __ansi_trace() "[trace  ]",
+    __ansi_debug() "[debug  ]",
+    __ansi_info() "[info   ]",
+    __ansi_notice() "[notice ]",
+    __ansi_warning() "[Warning]",
+    __ansi_error() "[ERROR  ]",
+    __ansi_fatal() "[FATAL  ]",
   };
 
-  struct fmt_ansi_decorator_gen {
-    template< typename FormatterT >
-    blf::fmt_char_decorator< FormatterT > operator[](FormatterT const& fmt) const {
-      typedef blf::fmt_char_decorator< FormatterT >                  decorator;
-      typedef ansi_decorator_traits< typename decorator::char_type > traits_t;
-
-      return decorator(fmt, traits_t::get_patterns(), traits_t::get_replacements());
-    }
-
-  };
-
-  fmt_ansi_decorator_gen const ansi_level = {};
+  BOOST_LOG_ATTRIBUTE_KEYWORD(severity_, "Severity", logging::level)
+  BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp_, "TimeStamp", boost::posix_time::ptime)
+  BOOST_LOG_ATTRIBUTE_KEYWORD(channel_, "Channel", std::string)
+  BOOST_LOG_ATTRIBUTE_KEYWORD(lineid_, "LineID", uint32_t)
+  BOOST_LOG_ATTRIBUTE_KEYWORD(scope_, "Scope", bla::named_scope::value_type)
 
   BOOST_LOG_GLOBAL_LOGGER_INIT(logger, logger_class) {
     blg::add_common_attributes();
 
-    bool const is_a_tty = isatty(fileno(stderr));
+    bool const is_a_tty   = isatty(fileno(stderr));
+    auto const ansi_level = ble::char_decor(boost::make_iterator_range(level_names), boost::make_iterator_range(ansi_level_names));
 
-    if (is_a_tty) {
-      blg::init_log_to_console(std::clog,
-                               blk::format = blf::format(__ansi_line("%1%: %2% %3% %4%: %5%"))
-                                             % blf::attr< uint32_t >("LineID", blk::format = "%08x")
-                                             % blf::date_time< boost::posix_time::ptime >("TimeStamp")
-                                             % ansi_level[blf::attr < logging::level > ("Severity")]
-                                             % blf::attr< std::string >("Channel")
-                                             % blf::message(),
-                               blk::auto_flush = true,
-                               blk::filter = blt::attr< logging::level >("Severity") >= logging::level::trace);
-    } else {
-      blg::init_log_to_console(std::clog,
-                               blk::format = blf::format("%1%: %2% %3% %4%: %5%")
-                                             % blf::attr< uint32_t >("LineID", blk::format = "%08x")
-                                             % blf::date_time< boost::posix_time::ptime >("TimeStamp")
-                                             % blf::attr< logging::level >("Severity")
-                                             % blf::attr< std::string >("Channel")
-                                             % blf::message(),
-                               blk::auto_flush = true,
-                               blk::filter = blt::attr< logging::level >("Severity") >= logging::level::trace);
-    }
+    if (is_a_tty)
+      blg::add_console_log(std::clog,
+                           blk::format = ble::format(__ansi_line("%1%: %2% %3% %4%: %5%"))
+                                         % (ble::stream << std::hex << std::setw(8) << std::setfill('0') << lineid_ << std::dec << std::setfill(' '))
+                                         % timestamp_
+                                         % ansi_level[ble::stream << severity_]
+                                         % channel_
+                                         % ble::message,
+                           blk::auto_flush = true,
+                           blk::filter = severity_ >= logging::level::trace);
+
+    else
+      blg::add_console_log(std::clog,
+                           blk::format = ble::format("%1%: %2% %3% %4%: %5%")
+                                         % (ble::stream << std::hex << std::setw(8) << std::setfill('0') << lineid_ << std::dec << std::setfill(' '))
+                                         % timestamp_
+                                         % severity_
+                                         % channel_
+                                         % ble::message,
+                           blk::auto_flush = true,
+                           blk::filter = severity_ >= logging::level::trace);
 
     // blg::init_log_to_file("application.log",
-    //                       blk::format = blf::format("%1%: %2% %3% %4%: %5%")
-    //                                     % blf::attr< uint32_t >("LineID", blk::format = "%08x")
-    //                                     % blf::date_time< boost::posix_time::ptime >("TimeStamp")
-    //                                     % blf::attr< logging::level >("Severity")
-    //                                     % blf::attr< std::string >("Channel")
-    //                                     % blf::message(),
-    //                       blk::rotation_size = 10 * 1024 * 1024);
+    // blk::format = ble::format("%1%: %2% %3% %4%: %5%")
+    // % ble::attr< uint32_t >("LineID", blk::format = "%08x")
+    // % timestamp_
+    // % ble::attr< logging::level >("Severity")
+    // % channel_
+    // % ble::message,
+    // blk::rotation_size = 10 * 1024 * 1024);
 
     boost::shared_ptr< blg::core > core = blg::core::get();
 

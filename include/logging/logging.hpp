@@ -2,17 +2,15 @@
  * @file
  *
  * Distributed under the Boost Software License, Version 1.0.
- * See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt
- *
- * @date 19 déc. 2009
- * @todo comment
+ * See accompanying file LICENSE or copy at http://www.boost.org/LICENSE_1_0.txt
  */
 
-#ifndef LOGGER_HXX_
-#define LOGGER_HXX_
+#ifndef __LOGGING_LOGGING_HPP__
+#define __LOGGING_LOGGING_HPP__
 
 #include <boost/thread.hpp>
 #include <boost/log/common.hpp>
+#include <boost/log/sources/severity_channel_logger.hpp>
 #include <ostream>
 
 namespace logging {
@@ -46,45 +44,16 @@ namespace logging {
   typedef bls::severity_channel_logger_mt< logging::level > logger_class;
   BOOST_LOG_GLOBAL_LOGGER(logger, logger_class);
 
-  template< typename Context >
-  class logger_maker {
-    private:
-      logger_maker(logging::level const& level, std::string const& module=Context::module) :
-        logger(logging::logger::get()),
-        record(this->logger.open_record((boost::log::keywords::severity = level, boost::log::keywords::channel = module)))
-      {}
-
-      logging::logger_class& logger;
-      blg::record            record;
-
-      typedef boost::log::aux::record_pump< logging::logger_class > pump_type;
-
-    public:
-      static inline logger_maker trace() { return logger_maker(logging::level::trace); }
-      static inline logger_maker debug() { return logger_maker(logging::level::debug); }
-      static inline logger_maker info() { return logger_maker(logging::level::info); }
-      static inline logger_maker notice() { return logger_maker(logging::level::notice); }
-      static inline logger_maker warning() { return logger_maker(logging::level::warning); }
-      static inline logger_maker error() { return logger_maker(logging::level::error); }
-      static inline logger_maker fatal() { return logger_maker(logging::level::fatal); }
-
-      inline pump_type pump() { return boost::log::aux::make_record_pump(this->logger, this->record); }
-  };
-
-  struct default_context {
-    static std::string const module;
-  };
-
-  typedef logger_maker< default_context > log;
+  static constexpr char const module_name[] = "main";
 
 } // namespace logging
 
-#define __fatal()  logging::log::fatal().pump().stream()
-#define __error()  logging::log::error().pump().stream()
-#define __warn()   logging::log::warning().pump().stream()
-#define __info()   logging::log::info().pump().stream()
-#define __notice() logging::log::notice().pump().stream()
-#define __debug()  logging::log::debug().pump().stream()
-#define __trace()  logging::log::trace().pump().stream()
+#define __fatal()  BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::fatal)
+#define __error()  BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::error)
+#define __warn()   BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::warning)
+#define __info()   BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::info)
+#define __notice() BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::notice)
+#define __debug()  BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::debug)
+#define __trace()  BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::trace)
 
-#endif /* LOGGER_HXX_ */
+#endif // ifndef __LOGGING_LOGGING_HPP__

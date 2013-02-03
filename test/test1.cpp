@@ -2,23 +2,14 @@
  * @file
  *
  * Distributed under the Boost Software License, Version 1.0.
- * See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt
- *
- * @date 11 janv. 2011
- * @todo comment
+ * See accompanying file LICENSE or copy at http://www.boost.org/LICENSE_1_0.txt
  */
 
 #include <logging/logging.hpp>
 
 namespace test_module {
   namespace logging {
-    struct context {
-      static std::string const module;
-    };
-
-    std::string const context::module = "log/module/test";
-
-    typedef::logging::logger_maker< context > log;
+    static constexpr char const module_name[] = "log/module/test";
   }
 
   static void test() {

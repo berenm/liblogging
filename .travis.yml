@@ -2,7 +2,7 @@ language: cpp
 script:
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TESTS=1 ..
+  - cmake -DBUILD_TESTS=1 ..
   - make
   - make test
 compiler:

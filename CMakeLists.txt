@@ -12,17 +12,20 @@ include(FixStaticLink)
 project(liblogging CXX)
 parse_version(liblogging VERSION 0.0.1)
 
-add_submodule(boost-log lib/boost-log INCLUDE_DIRS .)
+
+add_submodule(boost-log https://github.com/bminor/boost-log.git lib/boost-log
+  BRANCH master
+  INCLUDE_DIRS .
+)
 
 find_package(Boost COMPONENTS filesystem system thread REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 
-include_directories(include)
-
 # -------------------------------------------------------------------------
 # liblogging
-file(GLOB_RECURSE liblogging_SOURCES src/*.cpp)
+include_directories(include)
+
 file(GLOB_RECURSE boost-log_SOURCES
   ${boost-log_SOURCE_DIR}/libs/log/src/attribute_name.cpp
   ${boost-log_SOURCE_DIR}/libs/log/src/attribute_set.cpp
@@ -65,25 +68,22 @@ file(GLOB_RECURSE boost-log_SOURCES
   ${boost-log_SOURCE_DIR}/libs/log/src/trivial.cpp
   ${boost-log_SOURCE_DIR}/libs/log/src/unhandled_exception_count.cpp
 )
-add_library(logging SHARED
-  ${liblogging_SOURCES}
-  ${boost-log_SOURCES}
-)
+
+file(GLOB_RECURSE liblogging_SOURCES src/*.cpp)
+add_library(logging ${liblogging_SOURCES} ${boost-log_SOURCES})
 set_target_properties(logging PROPERTIES
   VERSION   ${liblogging_VERSION}
   SOVERSION ${liblogging_SOVERSION}
   SONAME    liblogging${liblogging_SOVERSION}
 )
-target_link_libraries(logging
-  ${Boost_LIBRARIES}
-  pthread rt
-)
+target_link_libraries(logging ${Boost_LIBRARIES})
 
 # -------------------------------------------------------------------------
 # installation
 install(TARGETS logging
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 install(DIRECTORY include/logging
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
@@ -91,12 +91,10 @@ install(DIRECTORY include/logging
 
 # -------------------------------------------------------------------------
 # tests
-if(CMAKE_BUILD_TESTS)
+if(BUILD_TESTS)
   enable_testing()
 
-  add_executable(unit-test-logging
-    test/test1.cpp
-  )
+  add_executable(unit-test-logging test/test1.cpp)
   target_link_libraries(unit-test-logging logging)
   add_test(unit-test-logging unit-test-logging)
 endif()

@@ -2,10 +2,7 @@
  * @file
  *
  * Distributed under the Boost Software License, Version 1.0.
- * See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt
- *
- * @date 21 nov. 2009
- * @todo comment
+ * See accompanying file LICENSE or copy at http://www.boost.org/LICENSE_1_0.txt
  */
 
 #include "logging/logging.hpp"
@@ -73,6 +70,7 @@ namespace logging {
   template< typename S >
   S& operator<<(S& s, logging::level const& l) {
     s << level_names[l.l];
+
     return s;
   }
 
@@ -83,8 +81,6 @@ namespace logging {
   const level level::warning = level(4);
   const level level::error   = level(5);
   const level level::fatal   = level(6);
-
-  std::string const default_context::module = "main";
 
 #define __ansi_trace()   __ansi(__ansi_faint())
 #define __ansi_debug()   __ansi(__ansi_color(fg, normal, green) ";" __ansi_faint())

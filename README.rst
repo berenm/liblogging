@@ -5,6 +5,7 @@ C++11 simple logging library
     :alt: Build Status
     :target: https://travis-ci.org/berenm/liblogging
 
+
 USAGE
 ````````````````````````````
 .. code:: cpp
@@ -32,6 +33,7 @@ USAGE
   }
   }
 
+
 CONFIGURATION
 ````````````````````````````
 For now, there is none. Might be possible later on, but the purpose is to have nice logs without configuration.
@@ -46,6 +48,7 @@ I've done some tests on Windows, and it required a few tweaks to compile, but mo
 Once compiled, it works fine as well, ANSI codes are not supported natively, but the support can be added using ansicon_. Download a pre-built ansicon from the download page, extract it somewhere and make the .exe and .dll executable. Then run ``ansicon -i`` from there and you are done.
 
 .. _ansicon: https://github.com/adoxa/ansicon
+
 
 COPYING INFORMATION
 ````````````````````````````

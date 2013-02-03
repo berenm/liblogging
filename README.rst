@@ -16,7 +16,7 @@ USAGE
   namespace foo {
   namespace core {
 
-    namespace logging { static constexpr char const module_name[] = "foo.core" }
+    namespace logging { static constexpr char const module_name[] = "foo.core"; }
 
   }
   }

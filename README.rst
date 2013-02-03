@@ -1,5 +1,5 @@
 ============================
-C++11 Simple Logging Library
+C++11 simple logging library
 ============================
 .. image:: https://secure.travis-ci.org/berenm/liblogging.png?branch=master
     :alt: Build Status

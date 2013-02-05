@@ -15,7 +15,6 @@ before_install:
   - sudo update-alternatives --set gcc /usr/bin/gcc-4.7
   - echo $CC
   - echo $CXX
-  - cat /var/lib/dpkg/info/libstdc++6-4.7-dev.list
-  - cat /var/lib/dpkg/info/libstdc++6.list
+  - cat /var/lib/dpkg/info/libstdc++6*.list
   - find /usr/include/c++/4.7/i686-linux-gnu -type f
   - grep 'bits/c++config.h' /var/lib/dpkg/info/*.list

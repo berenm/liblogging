@@ -7,9 +7,9 @@ compiler:
   - clang
   - gcc
 before_install:
-  - sudo apt-add-repository -y ppa:mapnik/boost
+  - sudo apt-add-repository --yes ppa:mapnik/boost
   - sudo apt-get update
-  - sudo apt-get install -y gcc-snapshot libboost1.49-dev
+  - sudo apt-get install --yes --install-suggests gcc-snapshot libboost1.49-dev
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.6
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/lib/gcc-snapshot/bin/gcc 40 --slave /usr/bin/g++ g++ /usr/lib/gcc-snapshot/bin/g++
   - sudo update-alternatives --set gcc /usr/lib/gcc-snapshot/bin/gcc

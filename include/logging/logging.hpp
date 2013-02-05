@@ -44,7 +44,7 @@ namespace logging {
   typedef bls::severity_channel_logger_mt< logging::level > logger_class;
   BOOST_LOG_GLOBAL_LOGGER(logger, logger_class);
 
-  static constexpr char const module_name[] = "main";
+  static constexpr char module_name[] = "main";
 
 } // namespace logging
 

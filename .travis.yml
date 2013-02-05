@@ -7,14 +7,8 @@ compiler:
   - clang
   - gcc
 before_install:
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo apt-get update
-  - sudo apt-get install -y gcc-4.7 g++-4.7 libboost1.48-all-dev
+  - sudo apt-get install -y gcc-snapshot libboost1.48-all-dev
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-4.6
-  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 40 --slave /usr/bin/g++ g++ /usr/bin/g++-4.7
-  - sudo update-alternatives --set gcc /usr/bin/gcc-4.7
-  - echo $CC
-  - echo $CXX
-  - cat /var/lib/dpkg/info/libstdc++6*.list
-  - find /usr/include/c++/4.7/i686-linux-gnu -type f
-  - grep 'bits/c++config.h' /var/lib/dpkg/info/*.list
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/lib/gcc-snapshot/bin/gcc 40 --slave /usr/bin/g++ g++ /usr/lib/gcc-snapshot/bin/g++
+  - sudo update-alternatives --set gcc /usr/lib/gcc-snapshot/bin/gcc

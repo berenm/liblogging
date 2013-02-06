@@ -44,16 +44,30 @@ namespace logging {
   typedef bls::severity_channel_logger_mt< logging::level > logger_class;
   BOOST_LOG_GLOBAL_LOGGER(logger, logger_class);
 
+  struct log {
+    log(logging::level const& level, std::string const& module) :
+      logger(logging::logger::get()),
+      record(this->logger.open_record((boost::log::keywords::severity = level, boost::log::keywords::channel = module)))
+    {}
+
+    logging::logger_class& logger;
+    blg::record            record;
+
+    typedef boost::log::aux::record_pump< logging::logger_class > pump_type;
+
+    inline pump_type pump() { return boost::log::aux::make_record_pump(this->logger, this->record); }
+  };
+
   static constexpr char module_name[] = "main";
 
 } // namespace logging
 
-#define __fatal()  BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::fatal)
-#define __error()  BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::error)
-#define __warn()   BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::warning)
-#define __info()   BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::info)
-#define __notice() BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::notice)
-#define __debug()  BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::debug)
-#define __trace()  BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::trace)
+#define __fatal()  ::logging::log(::logging::level::fatal, logging::module_name).pump().stream()
+#define __error()  ::logging::log(::logging::level::error, logging::module_name).pump().stream()
+#define __warn()   ::logging::log(::logging::level::warning, logging::module_name).pump().stream()
+#define __info()   ::logging::log(::logging::level::info, logging::module_name).pump().stream()
+#define __notice() ::logging::log(::logging::level::notice, logging::module_name).pump().stream()
+#define __debug()  ::logging::log(::logging::level::debug, logging::module_name).pump().stream()
+#define __trace()  ::logging::log(::logging::level::trace, logging::module_name).pump().stream()
 
 #endif // ifndef __LOGGING_LOGGING_HPP__

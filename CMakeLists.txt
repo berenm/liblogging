@@ -13,10 +13,8 @@ project(liblogging CXX)
 parse_version(liblogging VERSION 0.0.1)
 
 
-add_submodule(boost-log https://github.com/bminor/boost-log.git lib/boost-log
-  BRANCH master
-  INCLUDE_DIRS .
-)
+add_submodule(boost-log https://github.com/bminor/boost-log.git lib/boost-log BRANCH master INCLUDE_DIRS .)
+include_directories(${boost-log_INCLUDE_DIRS})
 
 find_package(Boost COMPONENTS filesystem system thread REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})

@@ -5,6 +5,10 @@ C++11 simple logging library
     :alt: Build Status
     :target: https://travis-ci.org/berenm/liblogging
 
+.. image:: http://stillmaintained.com/berenm/liblogging.png
+    :alt: Still Maintained?
+    :target: http://stillmaintained.com/berenm/liblogging
+
 
 USAGE
 ````````````````````````````

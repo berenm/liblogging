@@ -33,6 +33,11 @@ int main(int arg_count, char** arg_values) {
   __error() << "error message";
   __fatal() << "fatal message";
 
+  std::vector< std::string > v = {
+    "this", "is", "a", "vector", "of", "strings"
+  };
+  __info() << v << v;
+
   test_module::test();
 
   return 0;

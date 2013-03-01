@@ -10,7 +10,6 @@
 
 #include <cstdint>
 #include <ostream>
-#include <boost/log/sources/record_ostream.hpp>
 
 namespace std {
 
@@ -134,8 +133,8 @@ namespace std {
     };
   }
 
-  template< typename C, typename T = typename C::value_type, typename Type = typename detail::container_type< C >::type, typename Cr >
-  static inline boost::log::basic_record_ostream< Cr >& operator<<(boost::log::basic_record_ostream< Cr >& s, C const& v) {
+  template< typename C, typename T = typename C::value_type, typename Type = typename detail::container_type< C >::type, typename Cr, typename Tr >
+  static inline std::basic_ostream< Cr, Tr >& operator<<(std::basic_ostream< Cr, Tr >& s, C const& v) {
     if (std::begin(v) == std::end(v)) {
       s << detail::delimiters< C >::begin << detail::delimiters< C >::end;
 
@@ -154,15 +153,15 @@ namespace std {
     return s;
   }
 
-  template< typename K, typename V, typename Cr >
-  static inline boost::log::basic_record_ostream< Cr >& operator<<(boost::log::basic_record_ostream< Cr >& s, std::pair< K, V > const& p) {
+  template< typename K, typename V, typename Cr, typename Tr >
+  static inline std::basic_ostream< Cr, Tr >& operator<<(std::basic_ostream< Cr, Tr >& s, std::pair< K, V > const& p) {
     s << p.first << ": " << p.second;
 
     return s;
   }
 
-  template< typename ... Types, typename Cr >
-  static inline boost::log::basic_record_ostream< Cr >& operator<<(boost::log::basic_record_ostream< Cr >& s, std::tuple< Types ... > const& t) {
+  template< typename ... Types, typename Cr, typename Tr >
+  static inline std::basic_ostream< Cr, Tr >& operator<<(std::basic_ostream< Cr, Tr >& s, std::tuple< Types ... > const& t) {
     s << detail::delimiters< std::tuple< Types ... > >::begin;
     detail::tuple_printer< sizeof ... (Types) -1, Types ... >::print(s, t);
     s << detail::delimiters< std::tuple< Types ... > >::end;
@@ -170,15 +169,8 @@ namespace std {
     return s;
   }
 
-  template< size_t S, typename Cr >
-  static inline boost::log::basic_record_ostream< Cr >& operator<<(boost::log::basic_record_ostream< Cr >& s, std::bitset< S > const& b) {
-    s << b.to_string();
-
-    return s;
-  }
-
-  template< class R, class ... Args, typename Cr >
-  static inline boost::log::basic_record_ostream< Cr >& operator<<(boost::log::basic_record_ostream< Cr >& s, std::function< R(Args ...) > const& f) {
+  template< class R, class ... Args, typename Cr, typename Tr >
+  static inline std::basic_ostream< Cr, Tr >& operator<<(std::basic_ostream< Cr, Tr >& s, std::function< R(Args ...) > const& f) {
     s << reinterpret_cast< void const* >(*f.template target< R (*)(Args ...) >());
 
     return s;

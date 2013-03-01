@@ -77,7 +77,7 @@ set_target_properties(logging PROPERTIES
   SOVERSION ${liblogging_SOVERSION}
   SONAME    liblogging${liblogging_SOVERSION}
 )
-target_link_libraries(logging ${Boost_LIBRARIES})
+target_link_libraries(logging corefungi ${Boost_LIBRARIES})
 
 # -------------------------------------------------------------------------
 # installation
@@ -96,6 +96,6 @@ if(BUILD_TESTS)
   enable_testing()
 
   add_executable(liblogging-test-1 test/test1.cpp)
-  target_link_libraries(liblogging-test-1 corefungi logging)
+  target_link_libraries(liblogging-test-1 logging)
   add_test(liblogging-test-1 liblogging-test-1)
 endif()

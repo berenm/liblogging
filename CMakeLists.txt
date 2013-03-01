@@ -92,7 +92,7 @@ install(DIRECTORY include/logging
 if(BUILD_TESTS)
   enable_testing()
 
-  add_executable(unit-test-logging test/test1.cpp)
-  target_link_libraries(unit-test-logging logging)
-  add_test(unit-test-logging unit-test-logging)
+  add_executable(liblogging-test-1 test/test1.cpp)
+  target_link_libraries(liblogging-test-1 logging)
+  add_test(liblogging-test-1 liblogging-test-1)
 endif()

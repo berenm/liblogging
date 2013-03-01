@@ -11,7 +11,8 @@
 #include <boost/thread.hpp>
 #include <boost/log/common.hpp>
 #include <boost/log/sources/severity_channel_logger.hpp>
-#include <ostream>
+
+#include "logging/ostream.hpp"
 
 namespace logging {
   namespace blg = boost::log;

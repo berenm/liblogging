@@ -7,8 +7,7 @@
 
 #include "logging/logging.hpp"
 
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/utility/setup/console.hpp>
+#include <boost/log/utility/setup.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/expressions.hpp>
 
@@ -26,7 +25,7 @@
 
 namespace logging {
 
-#define __ansi(code_m)         "\e[" code_m "m"
+#define __ansi(code_m)         "\033[" code_m "m"
 #define __ansi_line(message_m) __ansi("0") message_m __ansi("0")
 
 #define __ansi_color_black   "0"
@@ -57,7 +56,7 @@ namespace logging {
 #define __ansi_negative()   "7"
 #define __ansi_crossed()    "9"
 
-  static const char* const level_names[] = {
+  static char const* const level_names[] = {
     "[trace  ]",
     "[debug  ]",
     "[info   ]",
@@ -90,7 +89,7 @@ namespace logging {
 #define __ansi_error()   __ansi(__ansi_color(fg, normal, red))
 #define __ansi_fatal()   __ansi(__ansi_color(fg, bright, black) ";" __ansi_color(bg, normal, red) ";" __ansi_bold())
 
-  static const char* const ansi_level_names[] = {
+  static char const* const ansi_level_names[] = {
     __ansi_trace() "[trace  ]",
     __ansi_debug() "[debug  ]",
     __ansi_info() "[info   ]",
@@ -103,36 +102,35 @@ namespace logging {
   BOOST_LOG_ATTRIBUTE_KEYWORD(severity_, "Severity", logging::level)
   BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp_, "TimeStamp", boost::posix_time::ptime)
   BOOST_LOG_ATTRIBUTE_KEYWORD(channel_, "Channel", std::string)
-  BOOST_LOG_ATTRIBUTE_KEYWORD(lineid_, "LineID", uint32_t)
+  BOOST_LOG_ATTRIBUTE_KEYWORD(line_id_, "LineID", uint32_t)
   BOOST_LOG_ATTRIBUTE_KEYWORD(scope_, "Scope", bla::named_scope::value_type)
 
   BOOST_LOG_GLOBAL_LOGGER_INIT(logger, logger_class) {
     blg::add_common_attributes();
 
-    bool const is_a_tty   = isatty(fileno(stderr));
-    auto const ansi_level = ble::char_decor(boost::make_iterator_range(level_names), boost::make_iterator_range(ansi_level_names));
+    bool const is_a_tty = isatty(fileno(stderr));
 
-    if (is_a_tty)
+    if (is_a_tty) {
       blg::add_console_log(std::clog,
-                           blk::format = ble::format(__ansi_line("%1%: %2% %3% %4%: %5%"))
-                                         % (ble::stream << std::hex << std::setw(8) << std::setfill('0') << lineid_ << std::dec << std::setfill(' '))
+                           blk::format = ble::format(__ansi_line("%1% (%2%) %3% %4%: %5%"))
                                          % timestamp_
-                                         % ansi_level[ble::stream << severity_]
+                                         % ble::c_decor[ble::stream << std::hex << std::setw(8) << std::setfill('0') << line_id_ << std::dec << std::setfill(' ')]
+                                         % ble::char_decor(level_names, ansi_level_names)[ble::stream << severity_]
                                          % channel_
                                          % ble::message,
                            blk::auto_flush = true,
                            blk::filter = severity_ >= logging::level::trace);
-
-    else
+    } else {
       blg::add_console_log(std::clog,
-                           blk::format = ble::format("%1%: %2% %3% %4%: %5%")
-                                         % (ble::stream << std::hex << std::setw(8) << std::setfill('0') << lineid_ << std::dec << std::setfill(' '))
+                           blk::format = ble::format("%1% (%2%) %3% %4%: %5%")
                                          % timestamp_
+                                         % ble::c_decor[ble::stream << std::hex << std::setw(8) << std::setfill('0') << line_id_ << std::dec << std::setfill(' ')]
                                          % severity_
                                          % channel_
                                          % ble::message,
                            blk::auto_flush = true,
                            blk::filter = severity_ >= logging::level::trace);
+    }
 
     // blg::init_log_to_file("application.log",
     // blk::format = ble::format("%1%: %2% %3% %4%: %5%")

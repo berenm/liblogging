@@ -13,8 +13,11 @@ project(liblogging CXX)
 parse_version(liblogging VERSION 0.0.1)
 
 
-add_submodule(boost-log https://github.com/bminor/boost-log.git lib/boost-log BRANCH master INCLUDE_DIRS .)
+add_submodule(boost-log git://github.com/bminor/boost-log.git lib/boost-log BRANCH master INCLUDE_DIRS .)
 include_directories(${boost-log_INCLUDE_DIRS})
+
+add_submodule(libcorefungi git://github.com/berenm/libcorefungi.git lib/corefungi BRANCH master INCLUDE_DIRS include)
+include_directories(${libcorefungi_INCLUDE_DIRS})
 
 find_package(Boost COMPONENTS filesystem system thread REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
@@ -93,6 +96,6 @@ if(BUILD_TESTS)
   enable_testing()
 
   add_executable(liblogging-test-1 test/test1.cpp)
-  target_link_libraries(liblogging-test-1 logging)
+  target_link_libraries(liblogging-test-1 corefungi logging)
   add_test(liblogging-test-1 liblogging-test-1)
 endif()

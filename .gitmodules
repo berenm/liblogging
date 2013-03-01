@@ -4,3 +4,6 @@
 [submodule "cmake/extra"]
 	path = cmake/extra
 	url = git://github.com/berenm/cmake-extra.git
+[submodule "lib/corefungi"]
+	path = lib/corefungi
+	url = git://github.com/berenm/libcorefungi.git

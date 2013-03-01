@@ -7,6 +7,8 @@
 
 #include <logging/logging.hpp>
 
+#include <corefungi.hpp>
+
 namespace test_module {
   namespace logging {
     static constexpr char const module_name[] = "log/module/test";
@@ -25,6 +27,8 @@ namespace test_module {
 }
 
 int main(int arg_count, char** arg_values) {
+  corefungi::init(arg_count, arg_values);
+
   __trace() << "debug message";
   __debug() << "debug message";
   __info() << "info message";

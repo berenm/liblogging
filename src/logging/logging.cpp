@@ -7,6 +7,8 @@
 
 #include "logging/logging.hpp"
 
+#include <corefungi.hpp>
+
 #include <boost/log/utility/setup.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/expressions.hpp>
@@ -24,6 +26,7 @@
 #include <cstdio>
 
 namespace logging {
+  namespace cfg = ::corefungi;
 
 #define __ansi(code_m)         "\033[" code_m "m"
 #define __ansi_line(message_m) __ansi("0") message_m __ansi("0")
@@ -105,6 +108,44 @@ namespace logging {
   BOOST_LOG_ATTRIBUTE_KEYWORD(line_id_, "LineID", uint32_t)
   BOOST_LOG_ATTRIBUTE_KEYWORD(scope_, "Scope", bla::named_scope::value_type)
 
+  static level verbosity() {
+    switch (cfg::get("log.level")[0]) {
+      case 't':
+
+        return level::trace;
+
+      case 'd':
+
+        return level::debug;
+
+      case 'i':
+
+        return level::info;
+
+      case 'n':
+
+        return level::notice;
+
+      case 'w':
+
+        return level::warning;
+
+      case 'e':
+
+        return level::error;
+
+      case 'f':
+
+        return level::fatal;
+    }
+  }
+
+  static cfg::sprout const o = {
+    "Logging options", {
+      { "log.level",   "the logging verbosity", cfg::default_ = "info", cfg::short_name = "l" }
+    }
+  };
+
   BOOST_LOG_GLOBAL_LOGGER_INIT(logger, logger_class) {
     blg::add_common_attributes();
 
@@ -119,7 +160,7 @@ namespace logging {
                                          % channel_
                                          % ble::message,
                            blk::auto_flush = true,
-                           blk::filter = severity_ >= logging::level::trace);
+                           blk::filter = severity_ >= logging::verbosity());
     } else {
       blg::add_console_log(std::clog,
                            blk::format = ble::format("%1% (%2%) %3% %4%: %5%")
@@ -129,7 +170,7 @@ namespace logging {
                                          % channel_
                                          % ble::message,
                            blk::auto_flush = true,
-                           blk::filter = severity_ >= logging::level::trace);
+                           blk::filter = severity_ >= logging::verbosity());
     }
 
     // blg::init_log_to_file("application.log",

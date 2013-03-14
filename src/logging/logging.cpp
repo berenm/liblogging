@@ -39,6 +39,7 @@ namespace logging {
 #define __ansi_color_magenta "5"
 #define __ansi_color_cyan    "6"
 #define __ansi_color_white   "7"
+#define __ansi_color_default "9"
 
 #define __ansi_color_foreground_normal(color_m) "3" BOOST_PP_CAT(__ansi_color_, color_m)
 #define __ansi_color_background_normal(color_m) "4" BOOST_PP_CAT(__ansi_color_, color_m)
@@ -60,13 +61,13 @@ namespace logging {
 #define __ansi_crossed()    "9"
 
   static char const* const level_names[] = {
-    "[trace  ]",
-    "[debug  ]",
-    "[info   ]",
-    "[notice ]",
-    "[Warning]",
-    "[ERROR  ]",
-    "[FATAL  ]",
+    "trace",
+    "debug",
+    "info",
+    "notice",
+    "Warning",
+    "ERROR",
+    "FATAL",
   };
 
   template< typename S >
@@ -90,7 +91,7 @@ namespace logging {
 #define __ansi_notice()  __ansi(__ansi_color(fg, normal, cyan))
 #define __ansi_warning() __ansi(__ansi_color(fg, normal, yellow))
 #define __ansi_error()   __ansi(__ansi_color(fg, normal, red))
-#define __ansi_fatal()   __ansi(__ansi_color(fg, bright, black) ";" __ansi_color(bg, normal, red) ";" __ansi_bold())
+#define __ansi_fatal()   __ansi(__ansi_color(bg, bright, default) ";" __ansi_color(fg, normal, red) ";" __ansi_negative() ";" __ansi_bold())
 
   static char const* const ansi_level_names[] = {
     __ansi_trace() "[trace  ]",
@@ -163,9 +164,9 @@ namespace logging {
                            blk::filter = severity_ >= logging::verbosity());
     } else {
       blg::add_console_log(std::clog,
-                           blk::format = ble::format("%1% (%2%) %3% %4%: %5%")
+                           blk::format = ble::format("{\"timestamp\": \"%1%\", \"record#\": %2%, \"severity\": \"%3%\", \"channel\": \"%4%\", \"data\": \"%5%\"}")
                                          % timestamp_
-                                         % ble::c_decor[ble::stream << std::hex << std::setw(8) << std::setfill('0') << line_id_ << std::dec << std::setfill(' ')]
+                                         % line_id_
                                          % severity_
                                          % channel_
                                          % ble::message,

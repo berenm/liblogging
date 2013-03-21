@@ -99,3 +99,8 @@ if(BUILD_TESTS)
   target_link_libraries(liblogging-test-1 logging)
   add_test(liblogging-test-1 liblogging-test-1)
 endif()
+
+if(ENABLE_GCOVERALLS)
+  include(GCoveralls)
+  enable_gcoveralls()
+endif()

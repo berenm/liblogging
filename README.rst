@@ -1,9 +1,12 @@
-============================
 C++11 simple logging library
 ============================
 .. image:: https://secure.travis-ci.org/berenm/liblogging.png?branch=master
     :alt: Build Status
     :target: https://travis-ci.org/berenm/liblogging
+
+.. image:: https://coveralls.io/repos/berenm/liblogging/badge.png?branch=master
+    :alt: Coverage Status
+    :target: https://coveralls.io/r/berenm/liblogging
 
 .. image:: http://stillmaintained.com/berenm/liblogging.png
     :alt: Still Maintained?

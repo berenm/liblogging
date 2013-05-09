@@ -94,13 +94,13 @@ namespace logging {
 #define __ansi_fatal()   __ansi(__ansi_color(bg, bright, default) ";" __ansi_color(fg, normal, red) ";" __ansi_negative() ";" __ansi_bold())
 
   static char const* const ansi_level_names[] = {
-    __ansi_trace() "[trace  ]",
-    __ansi_debug() "[debug  ]",
-    __ansi_info() "[info   ]",
-    __ansi_notice() "[notice ]",
-    __ansi_warning() "[Warning]",
-    __ansi_error() "[ERROR  ]",
-    __ansi_fatal() "[FATAL  ]",
+    __ansi_trace()   "❧",
+    __ansi_debug()   "❡",
+    __ansi_info()    "✔",
+    __ansi_notice()  "❢",
+    __ansi_warning() "▲",
+    __ansi_error()   "✖",
+    __ansi_fatal()   "⚡",
   };
 
   BOOST_LOG_ATTRIBUTE_KEYWORD(severity_, "Severity", logging::level)
@@ -110,40 +110,29 @@ namespace logging {
   BOOST_LOG_ATTRIBUTE_KEYWORD(scope_, "Scope", bla::named_scope::value_type)
 
   static level verbosity() {
-    switch (cfg::get("log.level")[0]) {
+    switch (cfg::get("log.level.#0")[0]) {
       case 't':
-
         return level::trace;
-
       case 'd':
-
         return level::debug;
-
       case 'i':
-
         return level::info;
-
       case 'n':
-
         return level::notice;
-
       case 'w':
-
         return level::warning;
-
       case 'e':
-
         return level::error;
-
       case 'f':
-
         return level::fatal;
+      default:
+        return level::info;
     }
   }
 
   static cfg::sprout const o = {
     "Logging options", {
-      { "log.level",   "the logging verbosity", cfg::default_ = "info", cfg::short_name = "l" }
+      { "log.level",   "the logging verbosity", cfg::short_name = "l", cfg::of_type< std::vector< std::string > >() }
     }
   };
 
@@ -154,9 +143,7 @@ namespace logging {
 
     if (is_a_tty) {
       blg::add_console_log(std::clog,
-                           blk::format = ble::format(__ansi_line("%1% (%2%) %3% %4%: %5%"))
-                                         % timestamp_
-                                         % ble::c_decor[ble::stream << std::hex << std::setw(8) << std::setfill('0') << line_id_ << std::dec << std::setfill(' ')]
+                           blk::format = ble::format(__ansi_line("%2%: %1% %3%"))
                                          % ble::char_decor(level_names, ansi_level_names)[ble::stream << severity_]
                                          % channel_
                                          % ble::message,
@@ -164,9 +151,8 @@ namespace logging {
                            blk::filter = severity_ >= logging::verbosity());
     } else {
       blg::add_console_log(std::clog,
-                           blk::format = ble::format("{\"timestamp\": \"%1%\", \"record#\": %2%, \"severity\": \"%3%\", \"channel\": \"%4%\", \"data\": \"%5%\"}")
+                           blk::format = ble::format("{\"timestamp\":\"%1%\",\"severity\":\"%2%\",\"channel\":\"%3%\",\"payload\":\"%4%\"}")
                                          % timestamp_
-                                         % line_id_
                                          % severity_
                                          % channel_
                                          % ble::message,

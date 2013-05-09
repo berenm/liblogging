@@ -11,11 +11,11 @@
 
 namespace test_module {
   namespace logging {
-    static constexpr char const module_name[] = "log/module/test";
+    static constexpr char const module_name[] = "module";
   }
 
   static void test() {
-    __trace() << "debug message";
+    __trace() << "trace message";
     __debug() << "debug message";
     __info() << "info message";
     __notice() << "notice message";
@@ -29,7 +29,7 @@ namespace test_module {
 int main(int arg_count, char** arg_values) {
   corefungi::init(arg_count, arg_values);
 
-  __trace() << "debug message";
+  __trace() << "trace message";
   __debug() << "debug message";
   __info() << "info message";
   __notice() << "notice message";

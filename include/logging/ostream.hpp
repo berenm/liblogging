@@ -9,24 +9,27 @@
 #define __LOGGING_OSTREAM_HPP__
 
 #include <cstdint>
-#include <ostream>
+
+#include <logging/logging.hpp>
+
 #include <vector>
+#include <queue>
 #include <list>
 #include <forward_list>
-#include <queue>
 #include <stack>
 #include <valarray>
-#include <array>
-#include <bitset>
 #include <set>
 #include <map>
 #include <unordered_set>
 #include <unordered_map>
-#include <tuple>
 #include <complex>
+#include <ostream>
+#include <array>
+#include <bitset>
+#include <tuple>
 #include <functional>
 
-namespace std {
+namespace liblog {
   namespace detail {
 
     struct sequence_container;
@@ -117,8 +120,8 @@ namespace std {
     };
   }
 
-  template< typename C, typename T = typename C::value_type, typename Type = typename detail::container_type< C >::type, typename Cr, typename Tr >
-  static inline std::basic_ostream< Cr, Tr >& operator<<(std::basic_ostream< Cr, Tr >& s, C const& v) {
+  template< typename C, typename Type = typename detail::container_type< C >::type >
+  static inline std::ostream& operator<<(std::ostream& s, C const& v) {
     if (std::begin(v) == std::end(v)) {
       s << detail::delimiters< C >::begin << detail::delimiters< C >::end;
 
@@ -126,8 +129,8 @@ namespace std {
     }
 
     s << detail::delimiters< C >::begin;
-    T const& f = *std::begin(v);
-    for (T const& t : v) {
+    auto const& f = *std::begin(v);
+    for (auto const& t : v) {
       if (&t != &f)
         s << detail::delimiters< C >::separator << ' ';
       s << t;
@@ -137,15 +140,15 @@ namespace std {
     return s;
   }
 
-  template< typename K, typename V, typename Cr, typename Tr >
-  static inline std::basic_ostream< Cr, Tr >& operator<<(std::basic_ostream< Cr, Tr >& s, std::pair< K, V > const& p) {
+  template< typename K, typename V >
+  static inline std::ostream& operator<<(std::ostream& s, std::pair< K, V > const& p) {
     s << p.first << ": " << p.second;
 
     return s;
   }
 
-  template< typename ... Types, typename Cr, typename Tr >
-  static inline std::basic_ostream< Cr, Tr >& operator<<(std::basic_ostream< Cr, Tr >& s, std::tuple< Types ... > const& t) {
+  template< typename ... Types >
+  static inline std::ostream& operator<<(std::ostream& s, std::tuple< Types ... > const& t) {
     s << detail::delimiters< std::tuple< Types ... > >::begin;
     detail::tuple_printer< sizeof ... (Types) -1, Types ... >::print(s, t);
     s << detail::delimiters< std::tuple< Types ... > >::end;
@@ -153,8 +156,8 @@ namespace std {
     return s;
   }
 
-  template< class R, class ... Args, typename Cr, typename Tr >
-  static inline std::basic_ostream< Cr, Tr >& operator<<(std::basic_ostream< Cr, Tr >& s, std::function< R(Args ...) > const& f) {
+  template< class R, class ... Args >
+  static inline std::ostream& operator<<(std::ostream& s, std::function< R(Args ...) > const& f) {
     s << reinterpret_cast< void const* >(*f.template target< R (*)(Args ...) >());
 
     return s;

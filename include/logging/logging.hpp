@@ -8,9 +8,11 @@
 #ifndef __LOGGING_LOGGING_HPP__
 #define __LOGGING_LOGGING_HPP__
 
-#include "logging/ostream.hpp"
-
+#include <vector>
+#include <functional>
 #include <iostream>
+
+#include <logging/ostream.hpp>
 
 namespace liblog {
   enum class level {

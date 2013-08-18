@@ -9,23 +9,14 @@
 
 #include <corefungi.hpp>
 
-#include <boost/log/utility/setup.hpp>
-#include <boost/log/attributes.hpp>
-#include <boost/log/expressions.hpp>
-
-#include <boost/date_time.hpp>
-#include <boost/shared_ptr.hpp>
-
-#include <boost/filesystem.hpp>
 #include <boost/preprocessor.hpp>
 
 #include <iostream>
-#include <fstream>
 
 #include <unistd.h>
 #include <cstdio>
 
-namespace logging {
+namespace liblog {
   namespace cfg = ::corefungi;
 
 #define __ansi(code_m)         "\033[" code_m "m"
@@ -60,7 +51,16 @@ namespace logging {
 #define __ansi_negative()   "7"
 #define __ansi_crossed()    "9"
 
-  static char const* const level_names[] = {
+#define __ansi_trace()   __ansi(__ansi_faint())
+#define __ansi_debug()   __ansi(__ansi_color(fg, normal, green) ";" __ansi_faint())
+#define __ansi_info()    __ansi(__ansi_color(fg, normal, blue))
+#define __ansi_notice()  __ansi(__ansi_color(fg, normal, cyan))
+#define __ansi_warning() __ansi(__ansi_color(fg, normal, yellow))
+#define __ansi_error()   __ansi(__ansi_color(fg, normal, red))
+#define __ansi_fatal()   __ansi(__ansi_color(bg, bright, default) ";" __ansi_color(fg, normal, red) ";" __ansi_negative() ";" __ansi_bold())
+
+  static constexpr char const* const level_names[] = {
+    "\n",
     "trace",
     "debug",
     "info",
@@ -70,30 +70,8 @@ namespace logging {
     "FATAL",
   };
 
-  template< typename S >
-  S& operator<<(S& s, logging::level const& l) {
-    s << level_names[l.l];
-
-    return s;
-  }
-
-  const level level::trace   = level(0);
-  const level level::debug   = level(1);
-  const level level::info    = level(2);
-  const level level::notice  = level(3);
-  const level level::warning = level(4);
-  const level level::error   = level(5);
-  const level level::fatal   = level(6);
-
-#define __ansi_trace()   __ansi(__ansi_faint())
-#define __ansi_debug()   __ansi(__ansi_color(fg, normal, green) ";" __ansi_faint())
-#define __ansi_info()    __ansi(__ansi_color(fg, normal, blue))
-#define __ansi_notice()  __ansi(__ansi_color(fg, normal, cyan))
-#define __ansi_warning() __ansi(__ansi_color(fg, normal, yellow))
-#define __ansi_error()   __ansi(__ansi_color(fg, normal, red))
-#define __ansi_fatal()   __ansi(__ansi_color(bg, bright, default) ";" __ansi_color(fg, normal, red) ";" __ansi_negative() ";" __ansi_bold())
-
-  static char const* const ansi_level_names[] = {
+  static constexpr char const* const ansi_level_names[] = {
+    __ansi("0")     "\n",
     __ansi_trace()   "❧",
     __ansi_debug()   "❡",
     __ansi_info()    "✔",
@@ -103,14 +81,27 @@ namespace logging {
     __ansi_fatal()   "⚡",
   };
 
-  BOOST_LOG_ATTRIBUTE_KEYWORD(severity_, "Severity", logging::level)
-  BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp_, "TimeStamp", boost::posix_time::ptime)
-  BOOST_LOG_ATTRIBUTE_KEYWORD(channel_, "Channel", std::string)
-  BOOST_LOG_ATTRIBUTE_KEYWORD(line_id_, "LineID", uint32_t)
-  BOOST_LOG_ATTRIBUTE_KEYWORD(scope_, "Scope", bla::named_scope::value_type)
+  static cfg::sprout const o = {
+    "Logging options", {
+      { "log.level",   "the logging verbosity", cfg::short_name = "l", cfg::of_type< std::vector< std::string > >() }
+    }
+  };
 
-  static level verbosity() {
-    switch (cfg::get("log.level.#0")[0]) {
+  std::ostream& operator<<(std::ostream& s, liblog::level const& l) {
+    static const bool is_atty = isatty(fileno(stderr));
+
+    if (is_atty)
+      s << ansi_level_names[static_cast< int8_t >(l)];
+    else
+      s << level_names[static_cast< int8_t >(l)];
+
+    return s;
+  }
+
+  liblog::level logstream::verbosity() {
+    static const char verbosity = cfg::get("log.level.#0")[0];
+
+    switch (verbosity) {
       case 't':
         return level::trace;
       case 'd':
@@ -130,48 +121,4 @@ namespace logging {
     }
   }
 
-  static cfg::sprout const o = {
-    "Logging options", {
-      { "log.level",   "the logging verbosity", cfg::short_name = "l", cfg::of_type< std::vector< std::string > >() }
-    }
-  };
-
-  BOOST_LOG_GLOBAL_LOGGER_INIT(logger, logger_class) {
-    blg::add_common_attributes();
-
-    bool const is_a_tty = isatty(fileno(stderr));
-
-    if (is_a_tty) {
-      blg::add_console_log(std::clog,
-                           blk::format = ble::format(__ansi_line("%2%: %1% %3%"))
-                                         % ble::char_decor(level_names, ansi_level_names)[ble::stream << severity_]
-                                         % channel_
-                                         % ble::message,
-                           blk::auto_flush = true,
-                           blk::filter = severity_ >= logging::verbosity());
-    } else {
-      blg::add_console_log(std::clog,
-                           blk::format = ble::format("{\"timestamp\":\"%1%\",\"severity\":\"%2%\",\"channel\":\"%3%\",\"payload\":\"%4%\"}")
-                                         % timestamp_
-                                         % severity_
-                                         % channel_
-                                         % ble::message,
-                           blk::auto_flush = true,
-                           blk::filter = severity_ >= logging::verbosity());
-    }
-
-    // blg::init_log_to_file("application.log",
-    // blk::format = ble::format("%1%: %2% %3% %4%: %5%")
-    // % ble::attr< uint32_t >("LineID", blk::format = "%08x")
-    // % timestamp_
-    // % ble::attr< logging::level >("Severity")
-    // % channel_
-    // % ble::message,
-    // blk::rotation_size = 10 * 1024 * 1024);
-
-    boost::shared_ptr< blg::core > core = blg::core::get();
-
-    return logger_class(blk::severity = logging::level::info);
-  }
-
-} // namespace logging
+} // namespace liblog

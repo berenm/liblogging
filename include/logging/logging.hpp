@@ -8,53 +8,77 @@
 #ifndef __LOGGING_LOGGING_HPP__
 #define __LOGGING_LOGGING_HPP__
 
-#include <boost/thread.hpp>
-#include <boost/log/common.hpp>
-#include <boost/log/sources/severity_channel_logger.hpp>
-
 #include "logging/ostream.hpp"
 
-namespace logging {
-  namespace blg = boost::log;
-  namespace bls = boost::log::sources;
-  namespace ble = boost::log::expressions;
-  namespace blk = boost::log::keywords;
-  namespace bla = boost::log::attributes;
+#include <iostream>
 
-  class level {
-    private:
-      size_t l;
-
-    public:
-      level() : l(0) {}
-      level(size_t const l) : l(l) {}
-
-      template< typename S > friend S& operator<<(S& s, logging::level const& l);
-      bool operator>=(level const& o) const { return this->l >= o.l; }
-      operator size_t() const { return this->l; }
-
-      static const level trace;
-      static const level debug;
-      static const level info;
-      static const level notice;
-      static const level warning;
-      static const level error;
-      static const level fatal;
+namespace liblog {
+  enum class level {
+    flush,
+    trace,
+    debug,
+    info,
+    notice,
+    warning,
+    error,
+    fatal,
   };
 
-  typedef bls::severity_channel_logger_mt< logging::level > logger_class;
-  BOOST_LOG_GLOBAL_LOGGER(logger, logger_class);
+  std::ostream& operator<<(std::ostream& s, liblog::level const& l);
 
-  static constexpr char module_name[] = "main";
+  struct logstream {
+    static liblog::level verbosity();
 
+    logstream(char const* module_name, liblog::level const& level) :
+      enabled { level >= logstream::verbosity() }
+    {
+      if (!this->enabled) return;
+
+      this->callbacks.reserve(20);
+      (*this) << module_name << " " << level << ": ";
+    }
+
+    ~logstream() {
+      if (!this->enabled) return;
+
+      (*this) << level::flush;
+      for (auto const& f : callbacks) { f(std::clog); }
+    }
+
+    template< typename T >
+    logstream const& operator<<(T&& v) const {
+      if (this->enabled) 
+        this->callbacks.emplace_back([v](std::ostream& s) -> std::ostream& { return s << v; });
+
+      return *this;
+    }
+
+    logstream const& operator<<(std::ostream& (f) (std::ostream &)) const {
+      if (this->enabled)
+        this->callbacks.emplace_back(std::move(f));
+
+      return *this;
+    }
+
+    typedef std::function< std::ostream& (std::ostream&) > callback_type;
+    typedef std::vector< callback_type >                   callbacks_type;
+
+    bool const             enabled;
+    callbacks_type mutable callbacks;
+  };
+
+} // namespace liblog
+
+namespace logging {
+  static constexpr char const module_name[] = "main";
 } // namespace logging
 
-#define __fatal()  BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::fatal)
-#define __error()  BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::error)
-#define __warn()   BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::warning)
-#define __info()   BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::info)
-#define __notice() BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::notice)
-#define __debug()  BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::debug)
-#define __trace()  BOOST_LOG_CHANNEL_SEV(::logging::logger::get(), logging::module_name, ::logging::level::trace)
+#define __fatal()  liblog::logstream{logging::module_name, liblog::level::fatal}
+#define __error()  liblog::logstream{logging::module_name, liblog::level::error}
+#define __warn()   liblog::logstream{logging::module_name, liblog::level::warning}
+#define __info()   liblog::logstream{logging::module_name, liblog::level::info}
+#define __notice() liblog::logstream{logging::module_name, liblog::level::notice}
+#define __debug()  liblog::logstream{logging::module_name, liblog::level::debug}
+#define __trace()  liblog::logstream{logging::module_name, liblog::level::trace}
 
 #endif // ifndef __LOGGING_LOGGING_HPP__

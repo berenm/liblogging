@@ -16,7 +16,7 @@ parse_version(liblogging VERSION 0.0.1)
 add_submodule(libcorefungi git://github.com/berenm/libcorefungi.git lib/corefungi BRANCH master INCLUDE_DIRS include)
 include_directories(${libcorefungi_INCLUDE_DIRS})
 
-find_package(Boost COMPONENTS filesystem system thread log REQUIRED)
+find_package(Boost COMPONENTS filesystem system thread REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 

@@ -120,7 +120,19 @@ namespace liblog {
     };
   }
 
-  template< typename C, typename Type = typename detail::container_type< C >::type >
+  template< typename C, typename T = typename C::value_type, typename Type = typename detail::container_type< C >::type >
+  static inline std::ostream& operator<<(std::ostream& s, C const& v);
+
+  template< typename K, typename V >
+  static inline std::ostream& operator<<(std::ostream& s, std::pair< K, V > const& p);
+
+  template< typename ... Types >
+  static inline std::ostream& operator<<(std::ostream& s, std::tuple< Types ... > const& t);
+
+  template< class R, class ... Args >
+  static inline std::ostream& operator<<(std::ostream& s, std::function< R(Args ...) > const& f);
+
+  template< typename C, typename T, typename Type >
   static inline std::ostream& operator<<(std::ostream& s, C const& v) {
     if (std::begin(v) == std::end(v)) {
       s << detail::delimiters< C >::begin << detail::delimiters< C >::end;
@@ -129,8 +141,8 @@ namespace liblog {
     }
 
     s << detail::delimiters< C >::begin;
-    auto const& f = *std::begin(v);
-    for (auto const& t : v) {
+    T const& f = *std::begin(v);
+    for (T const& t : v) {
       if (&t != &f)
         s << detail::delimiters< C >::separator << ' ';
       s << t;

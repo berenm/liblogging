@@ -2,7 +2,7 @@ language: cpp
 script:
   - mkdir build
   - cd build
-  - cmake -DCMAKE_CXX_FLAGS="-I/usr/include/x86_64-linux-gnu/c++/4.8/" -DBUILD_TESTS=1 -DENABLE_GCOVERALLS=1 .. && make && ldd liblogging-test* && ctest --output-on-failure -R ^liblogging-test && ./coveralls-upload
+  - cmake -DBUILD_TESTS=1 .. && make && ldd liblogging-test* && ctest --output-on-failure -R ^liblogging-test
 compiler:
   - gcc
   - clang

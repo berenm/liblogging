@@ -41,25 +41,46 @@ namespace liblog {
     template< typename T, typename C = typename container_type< T >::type >
     struct delimiters;
 
+    template< typename T >
+    struct delimiters< T, void > {
+      static constexpr char const* const begine = "";
+      static constexpr char const* const ende = "";
+    };
+
+    template< >
+    struct delimiters< std::string, void > {
+      static constexpr char const* const begine = "\"";
+      static constexpr char const* const ende = "\"";
+    };
+
+    template< > struct delimiters< char const*, void > : delimiters< std::string, void > {};
+    template< > struct delimiters< char*, void > : delimiters< std::string, void > {};
+
+    template< >
+    struct delimiters< char, void > {
+      static constexpr char const* const begine = "\'";
+      static constexpr char const* const ende = "\'";
+    };
+
     template< typename  T >
     struct delimiters< T, sequence_container > {
-      static constexpr char begin     = '[';
-      static constexpr char end       = ']';
-      static constexpr char separator = ',';
+      static constexpr char const begin     = '[';
+      static constexpr char const end       = ']';
+      static constexpr char const separator = ',';
     };
 
     template< typename T >
     struct delimiters< T, associative_container > {
-      static constexpr char begin     = '{';
-      static constexpr char end       = '}';
-      static constexpr char separator = ',';
+      static constexpr char const begin     = '{';
+      static constexpr char const end       = '}';
+      static constexpr char const separator = ',';
     };
 
     template< typename T >
     struct delimiters< T, collection_container > {
-      static constexpr char begin     = '(';
-      static constexpr char end       = ')';
-      static constexpr char separator = ',';
+      static constexpr char const begin     = '(';
+      static constexpr char const end       = ')';
+      static constexpr char const separator = ',';
     };
 
 #define STL_OSTREAM_DECLARE_CONTAINER_TYPE(container_m, type_m)                      \
@@ -101,20 +122,29 @@ namespace liblog {
 
     template< std::size_t const N, typename ... Types >
     struct tuple_printer {
+      typedef std::tuple< Types ... > tuple_type;
+
       template< typename S >
       static inline void print(S& s, std::tuple< Types ... > const& t) {
+        typedef typename std::decay< typename std::tuple_element< N, tuple_type >::type >::type value_type;
+
         detail::tuple_printer< N - 1, Types ... >::print(s, t);
 
-        s << detail::delimiters< std::tuple< Types ... > >::separator << ' ' << std::get< N >(t);
+        s << detail::delimiters< tuple_type >::separator << ' ';
+        s << detail::delimiters< value_type, void >::begine << std::get< N >(t) << detail::delimiters< value_type, void >::ende;
       }
 
     };
 
     template< typename ... Types >
     struct tuple_printer< 0, Types ... > {
+      typedef std::tuple< Types ... > tuple_type;
+
       template< typename S >
-      static inline void print(S& s, std::tuple< Types ... > const& t) {
-        s << std::get< 0 >(t);
+      static inline void print(S& s, tuple_type const& t) {
+        typedef typename std::decay< typename std::tuple_element< 0, tuple_type >::type >::type value_type;
+
+        s << detail::delimiters< value_type, void >::begine << std::get< 0 >(t) << detail::delimiters< value_type, void >::ende;
       }
 
     };
@@ -145,7 +175,7 @@ namespace liblog {
     for (T const& t : v) {
       if (&t != &f)
         s << detail::delimiters< C >::separator << ' ';
-      s << t;
+      s << detail::delimiters< T, void >::begine << t << detail::delimiters< T, void >::ende;
     }
     s << detail::delimiters< C >::end;
 

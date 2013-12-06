@@ -42,6 +42,9 @@ int main(int arg_count, char** arg_values) {
   };
   __info() << v << v;
 
+  auto const& t = std::make_tuple("this is ", 1, std::vector< char > {'t','u','p','l','e'});
+  __warn() << t << " " << t;
+
   test_module::test();
 
   return 0;
